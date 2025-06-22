@@ -1,0 +1,119 @@
+name: Security Scan
+on:
+  push:
+    branches: [dev-bhavesh, dev-gopal]
+  pull_request:
+    branches: [dev-bhavesh, dev-gopal]
+  schedule:
+    # Run security scan daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+jobs:
+  dependency-check:
+    name: Dependency Vulnerability Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          cache: "npm"
+          
+      - run: npm ci
+      
+      - name: Run npm audit
+        run: |
+          npm audit --audit-level=high --json > audit-results.json || true
+          cat audit-results.json
+          
+      - name: Check for high/critical vulns
+        run: |
+          HIGH_VULNS=$(cat audit-results.json | jq '.metadata.vulnerabilities.high // 0')
+          CRITICAL_VULNS=$(cat audit-results.json | jq '.metadata.vulnerabilities.critical // 0')
+          
+          if [ "$HIGH_VULNS" -gt 0 ] || [ "$CRITICAL_VULNS" -gt 0 ]; then
+            echo "❌ High or critical vulnerabilities found!"
+            echo "High: $HIGH_VULNS, Critical: $CRITICAL_VULNS"
+            exit 1
+          else
+            echo "✅ No high or critical vulnerabilities found"
+          fi
+
+  secret-scan:
+    name: Secret Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          
+      - name: Install truffleHog
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh -s -- -b /usr/local/bin
+          
+      - name: Run secret scan
+        run: |
+          trufflehog git file://. --only-verified --fail
+          
+      - name: Check for blocked patterns
+        run: |
+          echo "Checking for blocked patterns..."
+          
+          # Check for hardcoded passwords
+          if grep -r "password\s*=\s*[\"'][^\"']\+[\"']" src/; then
+            echo "❌ Hardcoded password found!"
+            exit 1
+          fi
+          
+          # Check for API keys
+          if grep -r "api_key\s*=\s*[\"'][^\"']\+[\"']" src/; then
+            echo "❌ Hardcoded API key found!"
+            exit 1
+          fi
+          
+          # Check for secrets
+          if grep -r "secret\s*=\s*[\"'][^\"']\+[\"']" src/; then
+            echo "❌ Hardcoded secret found!"
+            exit 1
+          fi
+          
+          # Check for tokens
+          if grep -r "token\s*=\s*[\"'][^\"']\+[\"']" src/; then
+            echo "❌ Hardcoded token found!"
+            exit 1
+          fi
+          
+          # Check for MongoDB connection strings with credentials
+          if grep -r "mongodb://.*:.*@" src/; then
+            echo "❌ MongoDB connection string with credentials found!"
+            exit 1
+          fi
+          
+          # Check for Redis connection strings with credentials  
+          if grep -r "redis://.*:.*@" src/; then
+            echo "❌ Redis connection string with credentials found!"
+            exit 1
+          fi
+          
+          echo "✅ No blocked patterns found"
+
+  license-check:
+    name: License Compliance Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          cache: "npm"
+          
+      - run: npm ci
+      
+      - name: Install license checker
+        run: npm install -g license-checker
+        
+      - name: Check licenses
+        run: |
+          license-checker --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;Unlicense' --failOn 'GPL;AGPL;LGPL;CDDL;EPL;MPL;SSPL;BUSL'

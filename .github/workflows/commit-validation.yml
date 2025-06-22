@@ -1,0 +1,31 @@
+name: Commit Message Validation
+on:
+  push:
+    branches: [dev-bhavesh, dev-gopal]
+  pull_request:
+    branches: [dev-bhavesh, dev-gopal]
+
+jobs:
+  validate-commit:
+    name: Validate Commit Messages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Validate Commit Messages
+        uses: wagoid/commitlint-github-action@v5
+        with:
+          configFile: ".commitlintrc.json"
+          
+      - name: Check commit message format
+        if: failure()
+        run: |
+          echo "❌ Commit message validation failed!"
+          echo "📋 Required format: type(scope): description"
+          echo "📝 Example: feat(remote-config): add new template validation"
+          echo "🏷️  Types: feat, fix, docs, style, refactor, test, chore"
+          echo "🎯 Scopes: remote-config, authentication, user-management, job-matching, negotiation, payment, global"
+          echo "📏 Description must be at least 10 characters long"
+          exit 1

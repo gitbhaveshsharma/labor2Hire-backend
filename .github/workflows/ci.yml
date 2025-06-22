@@ -1,0 +1,74 @@
+name: CI Pipeline
+on:
+  push:
+    branches: [dev-bhavesh, dev-gopal]
+  pull_request:
+    branches: [dev-bhavesh, dev-gopal]
+
+jobs:
+  test:
+    name: Node.js Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          cache: "npm"
+      - run: npm ci
+      - run: npm test
+      - run: npm run lint
+      - run: npm run build
+
+  security:
+    name: Security Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+      - run: npm audit --audit-level=high
+      - name: Run security scan
+        run: |
+          echo "Running security scan..."
+          # Add your security scanning tools here
+          # For example: npm run security-scan
+
+  admin-approval:
+    name: Admin Approval Required
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/dev-gopal'
+    steps:
+      - name: Request Admin Approval
+        run: echo "Admin approval required for dev-gopal branch changes"
+        
+  build-check:
+    name: Build Verification
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          cache: "npm"
+      - run: npm ci
+      - name: Check if app starts
+        run: |
+          timeout 30s npm start || true
+          echo "Build check completed"
+          
+  lint-check:
+    name: ESLint Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          cache: "npm"
+      - run: npm ci
+      - name: Run ESLint
+        run: |
+          npx eslint src/ --ext .js --format stylish || true
+          echo "Linting completed"

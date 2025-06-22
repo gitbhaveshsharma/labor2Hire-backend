@@ -1,0 +1,64 @@
+# CODEOWNERS - Define who can approve changes to specific parts of the repository
+# More info: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Global owners - Bhavesh has admin access to everything
+* @bhavesh
+
+# Remote config templates and schemas - Gopal can contribute with Bhavesh's approval
+src/modules/remote-config/templates/ @gopal @bhavesh
+src/modules/remote-config/schemas/ @gopal @bhavesh
+
+# Critical application files - Admin only (Bhavesh)
+src/app.js @bhavesh
+package.json @bhavesh
+package-lock.json @bhavesh
+
+# Environment and configuration files - Admin only
+.env* @bhavesh
+src/config/ @bhavesh
+src/middlewares/ @bhavesh
+src/constants/ @bhavesh
+
+# Authentication module - Admin only
+src/modules/authentication/ @bhavesh
+
+# User management module - Admin only  
+src/modules/user-management/ @bhavesh
+
+# Job matching module - Admin only
+src/modules/job-matching/ @bhavesh
+
+# Negotiation module - Admin only
+src/modules/negotiation/ @bhavesh
+
+# Payment module - Admin only
+src/modules/payment/ @bhavesh
+
+# Professional module - Admin only
+src/modules/professional/ @bhavesh
+
+# Company module - Admin only
+src/modules/company/ @bhavesh
+
+# Geolocation module - Admin only
+src/modules/geolocation/ @bhavesh
+
+# Statistics module - Admin only
+src/modules/statistics/ @bhavesh
+
+# Tests - Admin only
+src/tests/ @bhavesh
+
+# Logs and sensitive data - Admin only
+logs/ @bhavesh
+
+# GitHub configuration files - Admin only
+.github/ @bhavesh
+
+# Other remote-config files (excluding templates and schemas) - Admin only
+src/modules/remote-config/configManager.js @bhavesh
+src/modules/remote-config/index.js @bhavesh
+src/modules/remote-config/routes.js @bhavesh
+src/modules/remote-config/websocketServer.js @bhavesh
+src/modules/remote-config/services/ @bhavesh
+src/modules/remote-config/middleware/ @bhavesh
