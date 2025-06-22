@@ -1,0 +1,309 @@
+/**
+ * Remote Configuration Server
+ * Main server file that combines HTTP APIs and WebSocket server for real-time configuration management
+ * @author Labor2Hire Team
+ */
+
+import express from "express";
+import { createServer } from "http";
+import cors from "cors";
+import helmet from "helmet";
+import compression from "compression";
+import morgan from "morgan";
+import { logger } from "../config/logger.js";
+
+// Import remote configuration module
+import {
+  initializeRemoteConfigModule,
+  configRoutes,
+  configManager,
+  configWebSocketServer,
+} from "./remote-config/index.js";
+
+/**
+ * Create and configure Express application
+ */
+function createApp() {
+  const app = express();
+
+  // Security middleware
+  app.use(
+    helmet({
+      crossOriginEmbedderPolicy: false, // Allow WebSocket connections
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          connectSrc: ["'self'", "ws:", "wss:"], // Allow WebSocket connections
+          scriptSrc: ["'self'", "'unsafe-inline'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", "data:", "https:"],
+        },
+      },
+    })
+  );
+
+  // CORS configuration for API and WebSocket
+  app.use(
+    cors({
+      origin: process.env.ALLOWED_ORIGINS?.split(",") || [
+        "http://localhost:3000",
+        "http://localhost:3001",
+      ],
+      credentials: true,
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      allowedHeaders: [
+        "Content-Type",
+        "Authorization",
+        "X-Requested-With",
+        "X-Request-ID",
+      ],
+    })
+  );
+
+  // Compression middleware
+  app.use(compression());
+
+  // Body parsing middleware
+  app.use(express.json({ limit: "10mb" }));
+  app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
+  // Request logging
+  app.use(
+    morgan("combined", {
+      stream: {
+        write: (message) => logger.info(message.trim()),
+      },
+    })
+  );
+
+  // Request ID middleware for tracking
+  app.use((req, res, next) => {
+    req.id =
+      req.headers["x-request-id"] ||
+      `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    res.setHeader("X-Request-ID", req.id);
+    next();
+  });
+
+  return app;
+}
+
+/**
+ * Setup API routes
+ */
+function setupRoutes(app) {
+  // Root endpoint
+  app.get("/", (req, res) => {
+    res.json({
+      success: true,
+      message: "Remote Configuration Server is running",
+      service: "labor2hire-remote-config",
+      version: "1.0.0",
+      timestamp: new Date().toISOString(),
+      endpoints: {
+        health: "/api/config/health",
+        configurations: "/api/config/all",
+        websocket: "/config-socket",
+        documentation: "/api/config/docs",
+      },
+    });
+  });
+
+  // Configuration API routes
+  app.use("/api/config", configRoutes);
+
+  // API documentation endpoint
+  app.get("/api/config/docs", (req, res) => {
+    res.json({
+      success: true,
+      message: "Remote Configuration API Documentation",
+      service: "labor2hire-remote-config",
+      version: "1.0.0",
+      endpoints: {
+        "GET /api/config/health": "Service health check",
+        "GET /api/config/all": "Get all screen configurations",
+        "GET /api/config/screen/:screenName":
+          "Get specific screen configuration",
+        "POST /api/config/update": "Update single configuration key",
+        "POST /api/config/update-bulk": "Update multiple configuration keys",
+        "POST /api/config/reload/:screenName": "Reload configuration from file",
+        "GET /api/config/stats": "Get service statistics",
+        "POST /api/config/test-broadcast":
+          "Send test broadcast to WebSocket clients",
+        "GET /api/config/websocket/stats":
+          "Get WebSocket connection statistics",
+      },
+      websocket: {
+        endpoint: "/config-socket",
+        events: {
+          client_to_server: [
+            "requestFullConfig - Request full configuration sync",
+            "requestScreenConfig - Request specific screen configuration",
+            "ping - Connection health check",
+          ],
+          server_to_client: [
+            "fullConfigSync - Full configuration data",
+            "screenConfigUpdate - Updated screen configuration",
+            "testMessage - Test broadcast message",
+            "pong - Health check response",
+            "error - Error message",
+            "serverShutdown - Server shutdown notice",
+          ],
+        },
+      },
+      usage: {
+        updateConfig: {
+          method: "POST",
+          url: "/api/config/update",
+          body: {
+            screen: "Auth",
+            key: "backgroundColor",
+            value: "#ffffff",
+          },
+        },
+        bulkUpdate: {
+          method: "POST",
+          url: "/api/config/update-bulk",
+          body: {
+            screen: "Auth",
+            updates: {
+              backgroundColor: "#ffffff",
+              primaryColor: "#007bff",
+            },
+          },
+        },
+      },
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  // 404 handler
+  app.use("*", (req, res) => {
+    res.status(404).json({
+      success: false,
+      message: "Endpoint not found",
+      availableEndpoints: [
+        "GET /",
+        "GET /api/config/health",
+        "GET /api/config/docs",
+        "GET /api/config/all",
+      ],
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  // Global error handler
+  app.use((error, req, res, next) => {
+    logger.error("Unhandled error:", {
+      error: error.message,
+      stack: error.stack,
+      requestId: req.id,
+      url: req.url,
+      method: req.method,
+    });
+
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      requestId: req.id,
+      timestamp: new Date().toISOString(),
+      ...(process.env.NODE_ENV === "development" && {
+        error: error.message,
+        stack: error.stack,
+      }),
+    });
+  });
+}
+
+/**
+ * Start the server
+ */
+async function startServer() {
+  const PORT = process.env.CONFIG_SERVER_PORT || process.env.PORT || 5002;
+  const HOST = process.env.HOST || "localhost";
+
+  try {
+    // Create Express app
+    const app = createApp();
+
+    // Create HTTP server
+    const server = createServer(app);
+
+    // Initialize remote configuration module
+    logger.info("Initializing Remote Configuration Module...");
+    await initializeRemoteConfigModule(server);
+
+    // Setup API routes
+    setupRoutes(app);
+
+    // Start server
+    server.listen(PORT, HOST, () => {
+      logger.info(`🚀 Remote Configuration Server started successfully!`);
+      logger.info(`📡 HTTP Server: http://${HOST}:${PORT}`);
+      logger.info(`🔗 WebSocket Server: ws://${HOST}:${PORT}/config-socket`);
+      logger.info(
+        `📚 API Documentation: http://${HOST}:${PORT}/api/config/docs`
+      );
+      logger.info(`💚 Health Check: http://${HOST}:${PORT}/api/config/health`);
+
+      // Log configuration status
+      const stats = configManager.getConfigStats();
+      logger.info(`📋 Configurations loaded: ${stats.totalScreens} screens`);
+      logger.info(`📄 Available screens: ${stats.availableScreens.join(", ")}`);
+    });
+
+    // Graceful shutdown handling
+    const shutdown = async (signal) => {
+      logger.info(`Received ${signal}. Starting graceful shutdown...`);
+
+      try {
+        // Close WebSocket server
+        configWebSocketServer.close();
+
+        // Close HTTP server
+        server.close(() => {
+          logger.info("HTTP server closed");
+          process.exit(0);
+        });
+
+        // Force exit after 10 seconds
+        setTimeout(() => {
+          logger.error("Forced shutdown after 10 seconds");
+          process.exit(1);
+        }, 10000);
+      } catch (error) {
+        logger.error("Error during shutdown:", error);
+        process.exit(1);
+      }
+    };
+
+    // Handle shutdown signals
+    process.on("SIGTERM", () => shutdown("SIGTERM"));
+    process.on("SIGINT", () => shutdown("SIGINT"));
+
+    // Handle uncaught exceptions
+    process.on("uncaughtException", (error) => {
+      logger.error("Uncaught Exception:", error);
+      shutdown("uncaughtException");
+    });
+
+    process.on("unhandledRejection", (reason, promise) => {
+      logger.error("Unhandled Rejection at:", promise, "reason:", reason);
+      shutdown("unhandledRejection");
+    });
+  } catch (error) {
+    logger.error("Failed to start server:", error);
+    process.exit(1);
+  }
+}
+
+// Start server if this file is run directly
+if (import.meta.url === `file://${process.argv[1]}`) {
+  startServer().catch((error) => {
+    console.error("Failed to start Remote Configuration Server:", error);
+    process.exit(1);
+  });
+}
+
+export { createApp, startServer };
+export default { createApp, startServer };

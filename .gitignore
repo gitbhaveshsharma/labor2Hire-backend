@@ -1,3 +1,4 @@
+
 node_modules/
 .env
 .env.local
@@ -24,3 +25,5 @@ uploads/
 .coverage/
 junit.xml
 test-results.xml
+
+.copilate

@@ -65,6 +65,14 @@ import {
 // Import user-management routes
 import { userRoutes } from "./modules/user-management/index.js";
 
+// Import remote configuration module
+import {
+  configRoutes,
+  configManager,
+  configWebSocketServer,
+  initializeRemoteConfigModule,
+} from "./modules/remote-config/index.js";
+
 // Import middlewares
 import { errorHandler } from "./middlewares/errorHandler.js";
 import { notFoundHandler } from "./middlewares/notFoundHandler.js";
@@ -85,6 +93,8 @@ class Application {
     this.redis = redisConfig;
     this.io = null;
     this.socketManager = null;
+    this.configManager = null;
+    this.configWebSocketServer = null;
   }
   /**
    * Initialize application configurations
@@ -100,6 +110,7 @@ class Application {
 
       await this.setupDatabase();
       await this.setupRedis();
+      await this.setupRemoteConfig();
       this.setupMiddlewares();
       this.setupSocketIO();
       this.setupRoutes();
@@ -140,6 +151,28 @@ class Application {
       logger.warn("Redis setup failed, continuing without cache", {
         error: error.message,
       });
+    }
+  }
+
+  /**
+   * Setup remote configuration system
+   */
+  async setupRemoteConfig() {
+    try {
+      // Initialize remote configuration module
+      const configModule = await initializeRemoteConfigModule(this.server);
+
+      this.configManager = configModule.configManager;
+      this.configWebSocketServer = configModule.configWebSocketServer;
+
+      logger.info("Remote configuration system setup completed");
+    } catch (error) {
+      logger.error("Remote configuration setup failed", {
+        error: error.message,
+        stack: error.stack,
+      });
+      // Don't throw error - app can continue without remote config
+      logger.warn("Continuing without remote configuration system");
     }
   }
 
@@ -278,6 +311,7 @@ class Application {
           "geolocation",
           "notification",
           "payment",
+          "remote-config",
         ],
       });
     }); // Module routes
@@ -286,6 +320,9 @@ class Application {
     this.app.use("/api/geolocation", geolocationRoutes);
     this.app.use("/api/negotiations", negotiationRoutes);
     this.app.use("/api/connections", connectionRoutes);
+
+    // Remote configuration routes
+    this.app.use("/api/config", configRoutes);
 
     // Remove temporary endpoints since we now have proper routes
     logger.info("Routes setup completed");
@@ -347,6 +384,12 @@ class Application {
       if (this.io) {
         this.io.close();
         logger.info("Socket.IO server closed");
+      }
+
+      // Close remote configuration WebSocket server
+      if (this.configWebSocketServer) {
+        this.configWebSocketServer.close();
+        logger.info("Remote configuration WebSocket server closed");
       }
 
       // Close server

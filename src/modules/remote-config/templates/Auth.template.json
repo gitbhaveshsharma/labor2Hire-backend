@@ -1,0 +1,78 @@
+{
+  "screenTitle": "{{SCREEN_NAME}} Configuration",
+  "backgroundColor": "#ffffff",
+  "primaryColor": "#007bff",
+  "secondaryColor": "#6c757d",
+  "accentColor": "#28a745",
+  "loginButton": {
+    "text": "Sign In",
+    "backgroundColor": "#007bff",
+    "textColor": "#ffffff",
+    "borderRadius": "8px",
+    "enabled": true
+  },
+  "registerButton": {
+    "text": "Create Account",
+    "backgroundColor": "#28a745",
+    "textColor": "#ffffff",
+    "borderRadius": "8px",
+    "enabled": true
+  },
+  "forgotPasswordLink": {
+    "text": "Forgot Password?",
+    "textColor": "#007bff",
+    "enabled": true
+  },
+  "socialLogin": {
+    "enabled": false,
+    "providers": [],
+    "googleButton": {
+      "text": "Sign in with Google",
+      "backgroundColor": "#db4437",
+      "textColor": "#ffffff"
+    },
+    "facebookButton": {
+      "text": "Sign in with Facebook",
+      "backgroundColor": "#4267B2",
+      "textColor": "#ffffff"
+    }
+  },
+  "inputFields": {
+    "phoneNumber": {
+      "placeholder": "Enter your phone number",
+      "required": true,
+      "validation": "phone"
+    },
+    "password": {
+      "placeholder": "Enter your password",
+      "required": true,
+      "minLength": 8
+    }
+  },
+  "messaging": {
+    "welcomeText": "Welcome to {{SCREEN_NAME}}",
+    "errorMessages": {
+      "invalidCredentials": "Invalid phone number or password",
+      "networkError": "Please check your internet connection",
+      "serverError": "Something went wrong. Please try again."
+    },
+    "successMessages": {
+      "loginSuccess": "Welcome back!",
+      "registrationSuccess": "Account created successfully!"
+    }
+  },
+  "features": {
+    "biometricLogin": false,
+    "rememberMe": true,
+    "autoLogin": false,
+    "maintenanceMode": false
+  },
+  "animations": {
+    "enableTransitions": true,
+    "transitionDuration": 300,
+    "enableSplashScreen": true,
+    "splashDuration": 2000
+  },
+  "version": "{{VERSION}}",
+  "lastUpdated": "{{TIMESTAMP}}"
+}
