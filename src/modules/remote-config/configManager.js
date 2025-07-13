@@ -18,10 +18,8 @@ const __dirname = path.dirname(__filename);
 
 // Configuration directories
 const CONFIG_DIR = path.join(__dirname, "../../../configs");
-const SCHEMA_DIR = path.join(__dirname, "schemas");
-const TEMPLATES_DIR = path.join(__dirname, "templates");
-
-// Redis cache keys
+const SCHEMA_DIR = path.join(__dirname, "../../../configs/schemas");
+const TEMPLATES_DIR = path.join(__dirname, "../../../configs/templates");
 const CACHE_PREFIX = "config:";
 const CACHE_STATS_KEY = "config:stats";
 const CACHE_METADATA_KEY = "config:metadata";

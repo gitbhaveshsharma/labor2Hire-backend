@@ -9,7 +9,7 @@ import { body, param, validationResult } from "express-validator";
 import enhancedConfigManager from "./configManager.js";
 import configWebSocketServer from "./websocketServer.js";
 import { logger } from "../../config/logger.js";
-import rateLimitingMiddleware from "../../middlewares/rateLimiting.js";
+import rateLimiting from "../../middlewares/rateLimiting.js";
 import {
   authenticateConfigAccess,
   authorizeConfigOperation,
@@ -153,13 +153,8 @@ router.use(performanceMonitoringMiddleware);
 /**
  * Apply rate limiting to all configuration routes
  */
-router.use(
-  rateLimitingMiddleware.createRateLimiter({
-    windowMs: 60 * 1000, // 1 minute
-    max: 100, // 100 requests per minute
-    message: "Too many configuration requests, please try again later",
-  })
-);
+// Use the general API rate limiter for configuration routes
+router.use(rateLimiting.rateLimitGeneral);
 
 /**
  * @route GET /api/config/health

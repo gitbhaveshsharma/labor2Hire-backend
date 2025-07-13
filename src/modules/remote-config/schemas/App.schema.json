@@ -1,0 +1,288 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["screenType", "metadata", "navigation", "storeConfig", "providers", "components"],
+  "properties": {
+    "screenType": {
+      "type": "string",
+      "enum": ["main-app"]
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["screenTitle", "description", "version", "lastUpdated"],
+      "properties": {
+        "screenTitle": { "type": "string" },
+        "description": { "type": "string" },
+        "version": { "type": "string" },
+        "lastUpdated": { "type": "string" }
+      }
+    },
+    "navigation": {
+      "type": "object",
+      "required": ["initialRoute", "routes"],
+      "properties": {
+        "initialRoute": { "type": "string" },
+        "routes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "component"],
+            "properties": {
+              "name": { "type": "string" },
+              "component": { "type": "string" },
+              "options": { "type": "object" }
+            }
+          }
+        }
+      }
+    },
+    "storeConfig": {
+      "type": "object",
+      "required": ["remoteConfig", "initialState"],
+      "properties": {
+        "remoteConfig": {
+          "type": "object",
+          "required": ["enabled", "websocketUrl"],
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "websocketUrl": { "type": "string" },
+            "reconnectInterval": { "type": "number" },
+            "maxReconnectAttempts": { "type": "number" }
+          }
+        },
+        "initialState": { 
+          "type": "object",
+          "properties": {
+            "app": {
+              "type": "object",
+              "properties": {
+                "initialized": { "type": "boolean" },
+                "currentScreen": { "type": "string" },
+                "theme": { "type": "string" }
+              }
+            },
+            "language": {
+              "type": "object",
+              "properties": {
+                "current": { "type": ["string", "null"] },
+                "available": { 
+                  "type": "array",
+                  "items": { "type": "string" }
+                },
+                "isSelected": { "type": "boolean" }
+              }
+            },
+            "navigation": {
+              "type": "object",
+              "properties": {
+                "canGoBack": { "type": "boolean" },
+                "currentRoute": { "type": "string" }
+              }
+            },
+            "user": {
+              "type": "object",
+              "properties": {
+                "isLoggedIn": { "type": "boolean" },
+                "isOnboarded": { "type": "boolean" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "providers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type"],
+        "properties": {
+          "type": { "type": "string" },
+          "store": { "type": "string" },
+          "options": { "type": "object" }
+        }
+      }
+    },
+    "globalStyles": {
+      "type": "object",
+      "properties": {
+        "backgroundColor": { "type": "string" },
+        "statusBar": {
+          "type": "object",
+          "properties": {
+            "barStyle": { "type": "string" },
+            "backgroundColor": { "type": "string" }
+          }
+        }
+      }
+    },
+    "features": {
+      "type": "object",
+      "properties": {
+        "darkMode": { "type": "boolean" },
+        "biometricAuth": { "type": "boolean" },
+        "offlineSupport": { "type": "boolean" },
+        "pushNotifications": { "type": "boolean" },
+        "analytics": { "type": "boolean" },
+        "crashReporting": { "type": "boolean" }
+      }
+    },
+    "components": {
+      "type": "array",
+      "description": "Array of dynamic UI components that form the app structure",
+      "items": {
+        "$ref": "#/definitions/Component"
+      }
+    },
+    "loadingState": {
+      "$ref": "#/definitions/Component",
+      "description": "Component tree to display during app initialization"
+    },
+    "appConfig": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "buildNumber": { "type": "string" },
+        "environment": { "type": "string" },
+        "apiBaseUrl": { "type": "string" },
+        "websocketUrl": { "type": "string" },
+        "theme": {
+          "type": "object",
+          "properties": {
+            "primaryColor": { "type": "string" },
+            "secondaryColor": { "type": "string" },
+            "errorColor": { "type": "string" },
+            "warningColor": { "type": "string" },
+            "successColor": { "type": "string" },
+            "backgroundColor": { "type": "string" },
+            "textColor": { "type": "string" }
+          }
+        },
+        "fonts": {
+          "type": "object",
+          "properties": {
+            "regular": { "type": "string" },
+            "bold": { "type": "string" },
+            "light": { "type": "string" }
+          }
+        },
+        "animations": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "duration": { "type": "number" },
+            "easing": { "type": "string" }
+          }
+        }
+      }
+    },
+    "errorBoundary": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "fallback": { "$ref": "#/definitions/Component" }
+      }
+    }
+  },
+  "definitions": {
+    "Component": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": { 
+          "type": "string",
+          "enum": [
+            "View",
+            "Text",
+            "TouchableOpacity",
+            "Image",
+            "ImageBackground",
+            "ScrollView",
+            "SafeAreaView",
+            "StatusBar",
+            "ActivityIndicator",
+            "TextInput",
+            "FlatList",
+            "Modal",
+            "Switch",
+            "Slider",
+            "Picker",
+            "Button",
+            "Pressable",
+            "KeyboardAvoidingView",
+            "DynamicScreenRenderer"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the component"
+        },
+        "props": { 
+          "type": "object",
+          "description": "React Native component props",
+          "additionalProperties": true
+        },
+        "style": { 
+          "type": "object",
+          "description": "React Native style object",
+          "additionalProperties": true
+        },
+        "children": {
+          "type": "array",
+          "description": "Child components",
+          "items": { "$ref": "#/definitions/Component" }
+        },
+        "actions": {
+          "type": "object",
+          "description": "Event handlers and actions",
+          "patternProperties": {
+            "^on[A-Z][a-zA-Z]*$": {
+              "type": "object",
+              "required": ["type"],
+              "properties": {
+                "type": { "type": "string" },
+                "payload": { "type": "object" },
+                "condition": { "$ref": "#/definitions/Condition" },
+                "debounce": { "type": "number" }
+              }
+            }
+          }
+        },
+        "conditions": {
+          "type": "object",
+          "description": "Conditional rendering rules",
+          "properties": {
+            "show": { "$ref": "#/definitions/Condition" },
+            "hide": { "$ref": "#/definitions/Condition" },
+            "enable": { "$ref": "#/definitions/Condition" },
+            "disable": { "$ref": "#/definitions/Condition" }
+          }
+        },
+        "data": {
+          "type": "object",
+          "description": "Data binding configuration",
+          "properties": {
+            "source": { "type": "string" },
+            "mapping": { "type": "object" }
+          }
+        }
+      }
+    },
+    "Condition": {
+      "type": "object",
+      "required": ["operator"],
+      "properties": {
+        "operator": {
+          "type": "string",
+          "enum": ["equals", "notEquals", "greaterThan", "lessThan", "contains", "and", "or", "not"]
+        },
+        "field": { "type": "string" },
+        "value": {},
+        "conditions": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Condition" }
+        }
+      }
+    }
+  }
+}

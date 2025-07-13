@@ -1,0 +1,288 @@
+{
+  "screenType": "main-app",
+  "metadata": {
+    "screenTitle": "Labor2Hire App",
+    "description": "Main application entry point configuration",
+    "version": "{{VERSION}}",
+    "lastUpdated": "{{TIMESTAMP}}"
+  },
+  "globalStyles": {
+    "backgroundColor": "#ffffff",
+    "statusBar": {
+      "barStyle": "dark-content",
+      "backgroundColor": "#ffffff"
+    }
+  },
+  "navigation": {
+    "initialRoute": "LanguageSelection",
+    "routes": [
+      {
+        "name": "LanguageSelection",
+        "component": "Choose.lang",
+        "options": {
+          "headerShown": false,
+          "gestureEnabled": false
+        }
+      },
+      {
+        "name": "Auth",
+        "component": "Auth",
+        "options": {
+          "headerShown": false,
+          "gestureEnabled": false
+        }
+      },
+      {
+        "name": "Home",
+        "component": "Home",
+        "options": {
+          "headerShown": true,
+          "title": "Labor2Hire"
+        }
+      }
+    ]
+  },
+  "storeConfig": {
+    "remoteConfig": {
+      "enabled": true,
+      "websocketUrl": "ws://localhost:5002/config-socket",
+      "reconnectInterval": 5000,
+      "maxReconnectAttempts": 10
+    },
+    "initialState": {
+      "app": {
+        "initialized": false,
+        "currentScreen": "LanguageSelection",
+        "theme": "light"
+      },
+      "language": {
+        "current": null,
+        "available": ["en", "hi"],
+        "isSelected": false
+      },
+      "navigation": {
+        "canGoBack": false,
+        "currentRoute": "LanguageSelection"
+      },
+      "user": {
+        "isLoggedIn": false,
+        "isOnboarded": false
+      }
+    }
+  },
+  "features": {
+    "darkMode": false,
+    "biometricAuth": false,
+    "offlineSupport": true,
+    "pushNotifications": true,
+    "analytics": true,
+    "crashReporting": true
+  },
+  "components": [
+    {
+      "type": "SafeAreaView",
+      "style": {
+        "flex": 1,
+        "backgroundColor": "#ffffff"
+      },
+      "children": [
+        {
+          "type": "StatusBar",
+          "props": {
+            "barStyle": "dark-content",
+            "backgroundColor": "#ffffff"
+          }
+        },
+        {
+          "type": "DynamicScreenRenderer",
+          "props": {
+            "screenType": "{{CURRENT_SCREEN}}",
+            "initialScreen": "LanguageSelection"
+          },
+          "style": {
+            "flex": 1
+          }
+        }
+      ]
+    }
+  ],
+  "loadingState": {
+    "type": "SafeAreaView",
+    "style": {
+      "flex": 1,
+      "justifyContent": "center",
+      "alignItems": "center",
+      "backgroundColor": "#ffffff"
+    },
+    "children": [
+      {
+        "type": "StatusBar",
+        "props": {
+          "barStyle": "dark-content",
+          "backgroundColor": "#ffffff"
+        }
+      },
+      {
+        "type": "ActivityIndicator",
+        "props": {
+          "size": "large",
+          "color": "#007bff"
+        },
+        "style": {
+          "marginBottom": 20
+        }
+      },
+      {
+        "type": "Text",
+        "props": {
+          "text": "Initializing Labor2Hire..."
+        },
+        "style": {
+          "fontSize": 18,
+          "color": "#333333",
+          "textAlign": "center",
+          "fontWeight": "500"
+        }
+      },
+      {
+        "type": "Text",
+        "props": {
+          "text": "Setting up your personalized experience"
+        },
+        "style": {
+          "fontSize": 14,
+          "color": "#666666",
+          "textAlign": "center",
+          "marginTop": 8
+        }
+      }
+    ]
+  },
+  "providers": [
+    {
+      "type": "redux-provider",
+      "store": "store"
+    },
+    {
+      "type": "navigation-container"
+    },
+    {
+      "type": "remote-config-provider",
+      "options": {
+        "autoConnect": true,
+        "reconnectDelay": 5000
+      }
+    }
+  ],
+  "errorBoundary": {
+    "enabled": true,
+    "fallback": {
+      "type": "SafeAreaView",
+      "style": {
+        "flex": 1,
+        "justifyContent": "center",
+        "alignItems": "center",
+        "padding": 20,
+        "backgroundColor": "#ffffff"
+      },
+      "children": [
+        {
+          "type": "Text",
+          "props": {
+            "text": "🚧"
+          },
+          "style": {
+            "fontSize": 48,
+            "textAlign": "center",
+            "marginBottom": 20
+          }
+        },
+        {
+          "type": "Text",
+          "props": {
+            "text": "Oops! Something went wrong"
+          },
+          "style": {
+            "fontSize": 20,
+            "color": "#ff3333",
+            "marginBottom": 10,
+            "textAlign": "center",
+            "fontWeight": "bold"
+          }
+        },
+        {
+          "type": "Text",
+          "props": {
+            "text": "We're working to fix this issue. Please try restarting the app."
+          },
+          "style": {
+            "fontSize": 16,
+            "color": "#666666",
+            "textAlign": "center",
+            "marginBottom": 30,
+            "lineHeight": 22
+          }
+        },
+        {
+          "type": "TouchableOpacity",
+          "style": {
+            "backgroundColor": "#007bff",
+            "paddingHorizontal": 24,
+            "paddingVertical": 12,
+            "borderRadius": 8,
+            "elevation": 2
+          },
+          "actions": {
+            "onPress": {
+              "type": "reload",
+              "payload": {
+                "message": "Reloading app...",
+                "resetToInitial": true
+              }
+            }
+          },
+          "children": [
+            {
+              "type": "Text",
+              "props": {
+                "text": "Restart App"
+              },
+              "style": {
+                "color": "#ffffff",
+                "fontSize": 16,
+                "fontWeight": "600"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "appConfig": {
+    "name": "Labor2Hire",
+    "version": "{{VERSION}}",
+    "buildNumber": "{{BUILD_NUMBER}}",
+    "environment": "{{ENVIRONMENT}}",
+    "apiBaseUrl": "{{API_BASE_URL}}",
+    "websocketUrl": "{{WEBSOCKET_URL}}",
+    "theme": {
+      "primaryColor": "#007bff",
+      "secondaryColor": "#28a745",
+      "errorColor": "#ff3333",
+      "warningColor": "#ffc107",
+      "successColor": "#28a745",
+      "backgroundColor": "#ffffff",
+      "textColor": "#333333"
+    },
+    "fonts": {
+      "regular": "System",
+      "bold": "System",
+      "light": "System"
+    },
+    "animations": {
+      "enabled": true,
+      "duration": 300,
+      "easing": "ease-in-out"
+    }
+  }
+}

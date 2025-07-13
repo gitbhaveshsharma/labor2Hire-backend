@@ -1,35 +1,298 @@
 {
-  "screenTitle": "Choose Your Language",
-  "backgroundColor": "#ffffff",
-  "primaryLanguageButtons": [
+  "screenType": "language-selection",
+  "metadata": {
+    "screenTitle": "Choose Your Language",
+    "description": "Language selection screen with dynamic components",
+    "version": "{{VERSION}}",
+    "lastUpdated": "{{TIMESTAMP}}"
+  },
+  "globalStyles": {
+    "backgroundColor": "#ffffff",
+    "statusBar": {
+      "barStyle": "dark-content",
+      "backgroundColor": "#ffffff"
+    }
+  },
+  "components": [
     {
-      "code": "en",
-      "name": "English",
-      "backgroundColor": "#007bff",
-      "textColor": "#ffffff",
-      "borderRadius": "8px"
-      
-    },
-    {
-      "code": "hi",
-      "name": "हिन्दी",
-      "backgroundColor": "#28a745",
-      "textColor": "#ffffff",
-      "borderRadius": "8px"
-      
+      "type": "SafeAreaView",
+      "style": {
+        "flex": 1,
+        "alignItems": "center",
+        "justifyContent": "center",
+        "backgroundColor": "#ffffff"
+      },
+      "children": [
+        {
+          "type": "StatusBar",
+          "props": {
+            "barStyle": "dark-content",
+            "backgroundColor": "#ffffff"
+          }
+        },
+        {
+          "type": "View",
+          "style": {
+            "position": "absolute",
+            "top": "15%",
+            "width": "80%",
+            "alignItems": "center"
+          },
+          "children": [
+            {
+              "type": "Text",
+              "props": {
+                "text": "Choose Your Language"
+              },
+              "style": {
+                "fontSize": 28,
+                "fontWeight": "bold",
+                "color": "#333333",
+                "textAlign": "center"
+              }
+            }
+          ]
+        },
+        {
+          "type": "ImageBackground",
+          "props": {
+            "source": {
+              "uri": "https://example.com/path/to/your/language-background-image.png"
+            },
+            "resizeMode": "cover"
+          },
+          "style": {
+            "position": "absolute",
+            "width": "100%",
+            "height": "40%",
+            "bottom": 0
+          },
+          "children": [
+            {
+              "type": "View",
+              "style": {
+                "position": "absolute",
+                "width": "100%",
+                "height": "100%",
+                "backgroundColor": "rgba(0,0,0,0.7)"
+              }
+            }
+          ]
+        },
+        {
+          "type": "View",
+          "style": {
+            "width": "80%",
+            "alignItems": "center",
+            "justifyContent": "center",
+            "marginBottom": 40
+          },
+          "children": [
+            {
+              "type": "TouchableOpacity",
+              "style": {
+                "backgroundColor": "#007bff",
+                "borderRadius": 8,
+                "width": "100%",
+                "paddingVertical": 16,
+                "alignItems": "center",
+                "justifyContent": "center",
+                "marginVertical": 5,
+                "elevation": 3
+              },
+              "actions": {
+                "onPress": {
+                  "type": "selectLanguage",
+                  "payload": {
+                    "languageCode": "en",
+                    "navigateTo": "Auth"
+                  }
+                }
+              },
+              "children": [
+                {
+                  "type": "Text",
+                  "props": {
+                    "text": "English"
+                  },
+                  "style": {
+                    "color": "#ffffff",
+                    "fontSize": 18,
+                    "fontWeight": "bold"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "TouchableOpacity",
+              "style": {
+                "backgroundColor": "#28a745",
+                "borderRadius": 8,
+                "width": "100%",
+                "paddingVertical": 16,
+                "alignItems": "center",
+                "justifyContent": "center",
+                "marginVertical": 5,
+                "elevation": 3
+              },
+              "actions": {
+                "onPress": {
+                  "type": "selectLanguage",
+                  "payload": {
+                    "languageCode": "hi",
+                    "navigateTo": "Auth"
+                  }
+                }
+              },
+              "children": [
+                {
+                  "type": "Text",
+                  "props": {
+                    "text": "हिन्दी"
+                  },
+                  "style": {
+                    "color": "#ffffff",
+                    "fontSize": 18,
+                    "fontWeight": "bold"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
-  "backgroundImage": {
-    "url": "https://example.com/path/to/your/language-background-image.png",
-    "alt": "Language Options Background",
-    "gradientOverlay": {
-      "colors": ["rgba(0,0,0,0.7)", "rgba(0,0,0,0.2)"],
-      "direction": "to bottom",
-      "blendMode": "overlay"
+  "loadingState": {
+    "type": "SafeAreaView",
+    "style": {
+      "flex": 1,
+      "justifyContent": "center",
+      "alignItems": "center",
+      "backgroundColor": "#ffffff"
     },
-    "position": "bottom",
-    "height": "40%"
+    "children": [
+      {
+        "type": "StatusBar",
+        "props": {
+          "barStyle": "dark-content",
+          "backgroundColor": "#ffffff"
+        }
+      },
+      {
+        "type": "ActivityIndicator",
+        "props": {
+          "size": "large",
+          "color": "#007bff"
+        },
+        "style": {
+          "marginBottom": 16
+        }
+      },
+      {
+        "type": "Text",
+        "props": {
+          "text": "Loading language options..."
+        },
+        "style": {
+          "fontSize": 18,
+          "color": "#333333",
+          "textAlign": "center",
+          "fontWeight": "500"
+        }
+      },
+      {
+        "type": "Text",
+        "props": {
+          "text": "Please wait while we prepare your language selection."
+        },
+        "style": {
+          "fontSize": 14,
+          "color": "#666666",
+          "textAlign": "center",
+          "marginTop": 8
+        }
+      }
+    ]
   },
-  "version": "1.0.1",
-  "lastUpdated": "2023-11-16T09:00:00Z"
+  "errorState": {
+    "type": "SafeAreaView",
+    "style": {
+      "flex": 1,
+      "justifyContent": "center",
+      "alignItems": "center",
+      "backgroundColor": "#ffffff",
+      "padding": 20
+    },
+    "children": [
+      {
+        "type": "Text",
+        "props": {
+          "text": "⚠️"
+        },
+        "style": {
+          "fontSize": 48,
+          "textAlign": "center",
+          "marginBottom": 16
+        }
+      },
+      {
+        "type": "Text",
+        "props": {
+          "text": "Connection Error"
+        },
+        "style": {
+          "fontSize": 20,
+          "fontWeight": "bold",
+          "color": "#ff3333",
+          "textAlign": "center",
+          "marginBottom": 8
+        }
+      },
+      {
+        "type": "Text",
+        "props": {
+          "text": "Failed to load language options. Please check your internet connection and try again."
+        },
+        "style": {
+          "fontSize": 16,
+          "color": "#666666",
+          "textAlign": "center",
+          "marginBottom": 24,
+          "lineHeight": 22
+        }
+      },
+      {
+        "type": "TouchableOpacity",
+        "style": {
+          "backgroundColor": "#007bff",
+          "paddingHorizontal": 24,
+          "paddingVertical": 12,
+          "borderRadius": 8,
+          "elevation": 2
+        },
+        "actions": {
+          "onPress": {
+            "type": "retryLoad",
+            "payload": {
+              "message": "Retrying language load..."
+            }
+          }
+        },
+        "children": [
+          {
+            "type": "Text",
+            "props": {
+              "text": "Try Again"
+            },
+            "style": {
+              "color": "#ffffff",
+              "fontSize": 16,
+              "fontWeight": "600"
+            }
+          }
+        ]
+      }
+    ]
+  }
 }

@@ -5,11 +5,15 @@
  */
 
 // Core services
-export { default as configManager } from "./configManager.js";
-export { default as configWebSocketServer } from "./websocketServer.js";
+import configManager from "./configManager.js";
+import configWebSocketServer from "./websocketServer.js";
 
 // API routes
-export { default as configRoutes } from "./routes.js";
+import configRoutes from "./routes.js";
+
+// Re-export the modules as named exports for external use.
+// The import statements above make them available in this file's scope.
+export { configManager, configWebSocketServer, configRoutes };
 
 // Module initialization function
 export async function initializeRemoteConfigModule(server) {
