@@ -525,9 +525,23 @@ class EnhancedConfigManager {
       TIMESTAMP: new Date().toISOString(),
       VERSION: process.env.npm_package_version || "1.0.0",
       ENVIRONMENT: process.env.NODE_ENV || "development",
+      BUILD_NUMBER: process.env.BUILD_NUMBER || "dev",
+      API_BASE_URL: process.env.API_BASE_URL || "http://localhost:5002",
+      WEBSOCKET_URL: process.env.WEBSOCKET_URL || "ws://localhost:5002",
     };
 
-    return this.replaceVariablesInObject(config, variables);
+    // Try to use the advanced template engine if available
+    try {
+      const { templateEngine } = require("./services/advancedServices.js");
+      return templateEngine.processTemplate(config, variables);
+    } catch (error) {
+      // Fallback to simple variable replacement
+      logger.warn(
+        "Advanced template engine not available, using fallback:",
+        error.message
+      );
+      return this.replaceVariablesInObject(config, variables);
+    }
   }
 
   /**
@@ -668,6 +682,23 @@ class EnhancedConfigManager {
 
           // Create backup before update
           await this.createConfigBackup(screen, currentConfig);
+
+          // Create version before update
+          try {
+            const { versionManager } = await import(
+              "./services/advancedServices.js"
+            );
+            await versionManager.createVersion(screen, currentConfig, {
+              type: "pre-update",
+              userId: context.userId,
+              reason: `Before updating key: ${key}`,
+            });
+          } catch (versionError) {
+            logger.warn(
+              `Failed to create version for ${screen}:`,
+              versionError
+            );
+          }
 
           // Validate the update
           await this.validateConfigUpdate(screen, key, value);

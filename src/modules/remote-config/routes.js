@@ -824,4 +824,378 @@ router.get("/websocket/stats", (req, res) => {
   }
 });
 
+/**
+ * @route POST /api/config/template/process
+ * @desc Process template with variables
+ * @access Private
+ */
+router.post(
+  "/template/process",
+  [
+    body("template")
+      .notEmpty()
+      .withMessage("Template is required")
+      .isObject()
+      .withMessage("Template must be an object"),
+    body("variables")
+      .optional()
+      .isObject()
+      .withMessage("Variables must be an object"),
+  ],
+  authorizeConfigOperation(["write"]),
+  handleValidationErrors,
+  async (req, res) => {
+    try {
+      const { template, variables = {} } = req.body;
+      const { templateEngine } = await import("./services/advancedServices.js");
+
+      const processedTemplate = templateEngine.processTemplate(
+        template,
+        variables
+      );
+
+      res.json({
+        success: true,
+        message: "Template processed successfully",
+        data: {
+          originalTemplate: template,
+          processedTemplate,
+          variables,
+          timestamp: new Date().toISOString(),
+        },
+      });
+    } catch (error) {
+      logger.error("Failed to process template:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to process template",
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+);
+
+/**
+ * @route GET /api/config/version/:screenName
+ * @desc Get version history for a screen
+ * @access Private
+ */
+router.get(
+  "/version/:screenName",
+  [
+    param("screenName").custom(async (value) => {
+      const validScreens = enhancedConfigManager.VALID_SCREENS;
+      if (!validScreens.includes(value)) {
+        throw new Error(
+          `Invalid screen name. Valid screens: ${validScreens.join(", ")}`
+        );
+      }
+      return true;
+    }),
+  ],
+  authorizeConfigOperation(["read"]),
+  handleValidationErrors,
+  async (req, res) => {
+    try {
+      const { screenName } = req.params;
+      const { versionManager } = await import("./services/advancedServices.js");
+
+      const versionHistory = await versionManager.getVersionHistory(screenName);
+
+      res.json({
+        success: true,
+        message: `Version history retrieved for screen: ${screenName}`,
+        data: {
+          screen: screenName,
+          versions: versionHistory,
+          totalVersions: versionHistory.length,
+          timestamp: new Date().toISOString(),
+        },
+      });
+    } catch (error) {
+      logger.error(`Failed to get version history for ${screenName}:`, error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to retrieve version history",
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+);
+
+/**
+ * @route POST /api/config/version/:screenName/rollback
+ * @desc Rollback to a specific version
+ * @access Private
+ */
+router.post(
+  "/version/:screenName/rollback",
+  [
+    param("screenName").custom(async (value) => {
+      const validScreens = enhancedConfigManager.VALID_SCREENS;
+      if (!validScreens.includes(value)) {
+        throw new Error(
+          `Invalid screen name. Valid screens: ${validScreens.join(", ")}`
+        );
+      }
+      return true;
+    }),
+    body("version")
+      .notEmpty()
+      .withMessage("Version is required")
+      .isString()
+      .withMessage("Version must be a string"),
+  ],
+  authorizeConfigOperation(["write", "rollback"]),
+  handleValidationErrors,
+  async (req, res) => {
+    try {
+      const { screenName } = req.params;
+      const { version } = req.body;
+      const { versionManager } = await import("./services/advancedServices.js");
+
+      const context = {
+        userId: req.configAuth?.userId || "system",
+        userRole: req.configAuth?.role || "unknown",
+        ip: req.ip,
+        userAgent: req.get("User-Agent"),
+        requestId: req.headers["x-request-id"] || "unknown",
+      };
+
+      const rolledBackConfig = await versionManager.rollbackToVersion(
+        screenName,
+        version,
+        context
+      );
+
+      // Update the config manager with the rolled back configuration
+      await enhancedConfigManager.updateConfig(
+        screenName,
+        "FULL_CONFIG_ROLLBACK",
+        rolledBackConfig,
+        context
+      );
+
+      // Broadcast update to all connected WebSocket clients
+      await configWebSocketServer.broadcastConfigUpdate(
+        screenName,
+        rolledBackConfig
+      );
+
+      res.json({
+        success: true,
+        message: `Successfully rolled back ${screenName} to version ${version}`,
+        data: {
+          screen: screenName,
+          rolledBackToVersion: version,
+          config: rolledBackConfig,
+          timestamp: new Date().toISOString(),
+        },
+      });
+    } catch (error) {
+      logger.error(
+        `Failed to rollback ${screenName} to version ${version}:`,
+        error
+      );
+      res.status(500).json({
+        success: false,
+        message: "Failed to rollback configuration",
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+);
+
+/**
+ * @route GET /api/config/backup
+ * @desc List available backups
+ * @access Private
+ */
+router.get(
+  "/backup",
+  authorizeConfigOperation(["read", "backup"]),
+  async (req, res) => {
+    try {
+      const { backupService } = await import("./services/advancedServices.js");
+      const backups = await backupService.listBackups();
+
+      res.json({
+        success: true,
+        message: "Backup list retrieved successfully",
+        data: {
+          backups,
+          totalBackups: backups.length,
+          timestamp: new Date().toISOString(),
+        },
+      });
+    } catch (error) {
+      logger.error("Failed to list backups:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to retrieve backup list",
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+);
+
+/**
+ * @route POST /api/config/backup/create
+ * @desc Create a manual backup
+ * @access Private
+ */
+router.post(
+  "/backup/create",
+  authorizeConfigOperation(["write", "backup"]),
+  async (req, res) => {
+    try {
+      const { backupService } = await import("./services/advancedServices.js");
+      const backup = await backupService.createFullBackup();
+
+      res.json({
+        success: true,
+        message: "Backup created successfully",
+        data: {
+          backup: {
+            id: backup.id,
+            timestamp: backup.timestamp,
+            metadata: backup.metadata,
+          },
+          timestamp: new Date().toISOString(),
+        },
+      });
+    } catch (error) {
+      logger.error("Failed to create backup:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to create backup",
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+);
+
+/**
+ * @route POST /api/config/backup/restore
+ * @desc Restore from backup
+ * @access Private
+ */
+router.post(
+  "/backup/restore",
+  [
+    body("backupId")
+      .notEmpty()
+      .withMessage("Backup ID is required")
+      .isString()
+      .withMessage("Backup ID must be a string"),
+  ],
+  authorizeConfigOperation(["write", "restore"]),
+  handleValidationErrors,
+  async (req, res) => {
+    try {
+      const { backupId } = req.body;
+      const { backupService } = await import("./services/advancedServices.js");
+
+      const restoreResult = await backupService.restoreFromBackup(backupId);
+
+      // Broadcast full config sync to all connected clients
+      await configWebSocketServer.broadcastFullConfigSync();
+
+      res.json({
+        success: true,
+        message: `Successfully restored from backup: ${backupId}`,
+        data: restoreResult,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      logger.error(
+        `Failed to restore from backup ${req.body.backupId}:`,
+        error
+      );
+      res.status(500).json({
+        success: false,
+        message: "Failed to restore from backup",
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+);
+
+/**
+ * @route GET /api/config/health/detailed
+ * @desc Get detailed health status with all system components
+ * @access Private
+ */
+router.get(
+  "/health/detailed",
+  authorizeConfigOperation(["read"]),
+  async (req, res) => {
+    try {
+      const configStats = await enhancedConfigManager.getConfigStats();
+      const wsStats = configWebSocketServer.getConnectionStats();
+      const metricsStats = configMetricsService.getMetricsSummary();
+
+      // Get additional health information
+      const healthData = {
+        configuration: {
+          ...configStats,
+          status: "healthy",
+        },
+        websocket: {
+          ...wsStats,
+          status: wsStats.serverStatus === "active" ? "healthy" : "unhealthy",
+        },
+        metrics: {
+          ...metricsStats,
+          status: "healthy",
+        },
+        system: {
+          uptime: process.uptime(),
+          memory: process.memoryUsage(),
+          cpu: process.cpuUsage(),
+          nodeVersion: process.version,
+          platform: process.platform,
+          status: "healthy",
+        },
+        redis: {
+          connected: cache.isConnected ? cache.isConnected() : false,
+          status:
+            cache.isConnected && cache.isConnected() ? "healthy" : "unhealthy",
+        },
+        timestamp: new Date().toISOString(),
+      };
+
+      // Determine overall health status
+      const overallStatus = Object.values(healthData)
+        .filter((item) => typeof item === "object" && item.status)
+        .every((item) => item.status === "healthy")
+        ? "healthy"
+        : "degraded";
+
+      res.json({
+        success: true,
+        message: "Detailed health status retrieved successfully",
+        status: overallStatus,
+        data: healthData,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      logger.error("Failed to get detailed health status:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to retrieve detailed health status",
+        error: error.message,
+        status: "unhealthy",
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+);
+
 export default router;
