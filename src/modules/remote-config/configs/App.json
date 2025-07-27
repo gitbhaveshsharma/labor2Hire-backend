@@ -4,7 +4,7 @@
     "screenTitle": "Labor2Hire App",
     "description": "Main application entry point configuration",
     "version": "1.0.0",
-    "lastUpdated": "2025-07-27T11:52:55.609Z"
+    "lastUpdated": "2025-07-27T12:50:38.723Z"
   },
   "globalStyles": {
     "backgroundColor": "#ffffff",
@@ -290,7 +290,7 @@
   },
   "_metadata": {
     "source": "template",
-    "loadedAt": "2025-07-27T11:52:55.611Z",
+    "loadedAt": "2025-07-27T12:50:38.726Z",
     "templatePath": "E:\\labor2Hire-backend\\labor2Hire-Backend\\src\\modules\\remote-config\\templates\\App.template.json"
   }
 }
