@@ -3,8 +3,8 @@
   "metadata": {
     "screenTitle": "Labor2Hire App",
     "description": "Main application entry point configuration",
-    "version": "{{VERSION}}",
-    "lastUpdated": "{{TIMESTAMP}}"
+    "version": "1.0.0",
+    "lastUpdated": "2025-07-27T09:52:29.399Z"
   },
   "globalStyles": {
     "backgroundColor": "#ffffff",
@@ -57,7 +57,10 @@
       },
       "language": {
         "current": null,
-        "available": ["en", "hi"],
+        "available": [
+          "en",
+          "hi"
+        ],
         "isSelected": false
       },
       "navigation": {
@@ -260,9 +263,9 @@
   },
   "appConfig": {
     "name": "Labor2Hire",
-    "version": "{{VERSION}}",
+    "version": "1.0.0",
     "buildNumber": "{{BUILD_NUMBER}}",
-    "environment": "{{ENVIRONMENT}}",
+    "environment": "development",
     "apiBaseUrl": "{{API_BASE_URL}}",
     "websocketUrl": "{{WEBSOCKET_URL}}",
     "theme": {
@@ -284,5 +287,10 @@
       "duration": 300,
       "easing": "ease-in-out"
     }
+  },
+  "_metadata": {
+    "source": "template",
+    "loadedAt": "2025-07-27T09:52:29.402Z",
+    "templatePath": "E:\\labor2Hire-backend\\labor2Hire-Backend\\src\\modules\\remote-config\\templates\\App.template.json"
   }
 }

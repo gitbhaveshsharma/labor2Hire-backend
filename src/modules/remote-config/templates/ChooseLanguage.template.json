@@ -1,5 +1,5 @@
 {
-  "screenType": "language-selection",
+  "screenType": "ChooseLanguage",
   "metadata": {
     "screenTitle": "Choose Your Language",
     "description": "Language selection screen with dynamic components",

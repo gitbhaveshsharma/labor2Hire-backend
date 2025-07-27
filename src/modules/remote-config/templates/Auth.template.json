@@ -1,78 +1,94 @@
 {
-  "screenTitle": "{{SCREEN_NAME}} Configuration",
-  "backgroundColor": "#ffffff",
-  "primaryColor": "#007bff",
-  "secondaryColor": "#6c757d",
-  "accentColor": "#28a745",
-  "loginButton": {
-    "text": "Sign In",
-    "backgroundColor": "#007bff",
-    "textColor": "#ffffff",
-    "borderRadius": "8px",
-    "enabled": true
+  "screenType": "Auth",
+  "metadata": {
+    "screenTitle": "Authentication",
+    "description": "User login and registration screen",
+    "version": "{{VERSION}}",
+    "lastUpdated": "{{TIMESTAMP}}"
   },
-  "registerButton": {
-    "text": "Create Account",
-    "backgroundColor": "#28a745",
-    "textColor": "#ffffff",
-    "borderRadius": "8px",
-    "enabled": true
-  },
-  "forgotPasswordLink": {
-    "text": "Forgot Password?",
-    "textColor": "#007bff",
-    "enabled": true
-  },
-  "socialLogin": {
-    "enabled": false,
-    "providers": [],
-    "googleButton": {
-      "text": "Sign in with Google",
-      "backgroundColor": "#db4437",
-      "textColor": "#ffffff"
-    },
-    "facebookButton": {
-      "text": "Sign in with Facebook",
-      "backgroundColor": "#4267B2",
-      "textColor": "#ffffff"
+  "globalStyles": {
+    "backgroundColor": "#ffffff",
+    "statusBar": {
+      "barStyle": "dark-content",
+      "backgroundColor": "#ffffff"
     }
   },
-  "inputFields": {
-    "phoneNumber": {
-      "placeholder": "Enter your phone number",
-      "required": true,
-      "validation": "phone"
-    },
-    "password": {
-      "placeholder": "Enter your password",
-      "required": true,
-      "minLength": 8
+  "components": [
+    {
+      "type": "SafeAreaView",
+      "style": { "flex": 1, "backgroundColor": "#f5f5f5" },
+      "children": [
+        {
+          "type": "KeyboardAvoidingView",
+          "props": { "behavior": "padding" },
+          "style": { "flex": 1, "justifyContent": "center", "paddingHorizontal": 20 },
+          "children": [
+            {
+              "type": "Text",
+              "props": { "text": "Welcome to Labor2Hire" },
+              "style": { "fontSize": 28, "fontWeight": "bold", "textAlign": "center", "marginBottom": 40 }
+            },
+            {
+              "type": "TextInput",
+              "props": {
+                "placeholder": "Enter your phone number",
+                "keyboardType": "phone-pad"
+              },
+              "style": { "height": 50, "borderColor": "gray", "borderWidth": 1, "borderRadius": 8, "marginBottom": 15, "paddingHorizontal": 10, "backgroundColor": "#ffffff" },
+              "state": { "value": "user.phoneNumber" }
+            },
+            {
+              "type": "TextInput",
+              "props": {
+                "placeholder": "Enter your password",
+                "secureTextEntry": true
+              },
+              "style": { "height": 50, "borderColor": "gray", "borderWidth": 1, "borderRadius": 8, "marginBottom": 20, "paddingHorizontal": 10, "backgroundColor": "#ffffff" },
+              "state": { "value": "user.password" }
+            },
+            {
+              "type": "TouchableOpacity",
+              "style": { "backgroundColor": "#007bff", "paddingVertical": 15, "borderRadius": 8, "alignItems": "center", "marginBottom": 10 },
+              "actions": { "onPress": { "type": "login" } },
+              "children": [
+                {
+                  "type": "Text",
+                  "props": { "text": "Sign In" },
+                  "style": { "color": "#ffffff", "fontSize": 16, "fontWeight": "bold" }
+                }
+              ]
+            },
+            {
+              "type": "TouchableOpacity",
+              "style": { "backgroundColor": "#28a745", "paddingVertical": 15, "borderRadius": 8, "alignItems": "center" },
+              "actions": { "onPress": { "type": "navigateTo", "payload": { "screen": "Register" } } },
+              "children": [
+                {
+                  "type": "Text",
+                  "props": { "text": "Create Account" },
+                  "style": { "color": "#ffffff", "fontSize": 16, "fontWeight": "bold" }
+                }
+              ]
+            },
+            {
+              "type": "TouchableOpacity",
+              "style": { "marginTop": 20, "alignItems": "center" },
+              "actions": { "onPress": { "type": "navigateTo", "payload": { "screen": "ForgotPassword" } } },
+              "children": [
+                {
+                  "type": "Text",
+                  "props": { "text": "Forgot Password?" },
+                  "style": { "color": "#007bff", "fontSize": 14 }
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
-  },
-  "messaging": {
-    "welcomeText": "Welcome to {{SCREEN_NAME}}",
-    "errorMessages": {
-      "invalidCredentials": "Invalid phone number or password",
-      "networkError": "Please check your internet connection",
-      "serverError": "Something went wrong. Please try again."
-    },
-    "successMessages": {
-      "loginSuccess": "Welcome back!",
-      "registrationSuccess": "Account created successfully!"
-    }
-  },
-  "features": {
-    "biometricLogin": false,
-    "rememberMe": true,
-    "autoLogin": false,
-    "maintenanceMode": false
-  },
-  "animations": {
-    "enableTransitions": true,
-    "transitionDuration": 300,
-    "enableSplashScreen": true,
-    "splashDuration": 2000
-  },
-  "version": "{{VERSION}}",
-  "lastUpdated": "{{TIMESTAMP}}"
+  ],
+  "errorState": {
+    "type": "View",
+    "children": [{ "type": "Text", "props": { "text": "Error loading auth screen." } }]
+  }
 }

@@ -17,9 +17,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Configuration directories
-const CONFIG_DIR = path.join(__dirname, "../../../configs");
-const SCHEMA_DIR = path.join(__dirname, "../../../configs/schemas");
-const TEMPLATES_DIR = path.join(__dirname, "../../../configs/templates");
+const CONFIG_DIR = path.join(__dirname, "configs");
+const SCHEMA_DIR = path.join(__dirname, "schemas");
+const TEMPLATES_DIR = path.join(__dirname, "templates");
 const CACHE_PREFIX = "config:";
 const CACHE_STATS_KEY = "config:stats";
 const CACHE_METADATA_KEY = "config:metadata";
@@ -147,89 +147,135 @@ class EnhancedConfigManager {
    * Dynamically discover screens from various sources
    */
   async discoverScreens() {
-    try {
-      // Discover from config files
-      const configFiles = await this.discoverConfigFiles();
+    return this.executeWithCircuitBreaker("filesystem", async () => {
+      try {
+        logger.debug("Starting screen discovery process...");
 
-      // Discover from schema files
-      const schemaFiles = await this.discoverSchemaFiles();
+        // Discover from config files
+        const configFiles = await this.discoverConfigFiles();
+        logger.debug(
+          `Discovered ${configFiles.length} config files:`,
+          configFiles
+        );
 
-      // Discover from templates
-      const templateFiles = await this.discoverTemplateFiles();
+        // Discover from schema files
+        const schemaFiles = await this.discoverSchemaFiles();
+        logger.debug(
+          `Discovered ${schemaFiles.length} schema files:`,
+          schemaFiles
+        );
 
-      // Discover from environment variables
-      const envScreens = this.discoverScreensFromEnv();
+        // Discover from templates
+        const templateFiles = await this.discoverTemplateFiles();
+        logger.debug(
+          `Discovered ${templateFiles.length} template files:`,
+          templateFiles
+        );
 
-      // Combine all discovered screens
-      const allScreens = new Set([
-        ...configFiles,
-        ...schemaFiles,
-        ...templateFiles,
-        ...envScreens,
-      ]);
+        // Discover from environment variables
+        const envScreens = this.discoverScreensFromEnv();
+        logger.debug(
+          `Discovered ${envScreens.length} environment screens:`,
+          envScreens
+        );
 
-      this.validScreens = allScreens;
+        // Combine all discovered screens
+        const allScreens = new Set([
+          ...configFiles,
+          ...schemaFiles,
+          ...templateFiles,
+          ...envScreens,
+        ]);
 
-      logger.info(
-        `Discovered ${allScreens.size} screens:`,
-        Array.from(allScreens)
-      );
-    } catch (error) {
-      logger.error("Failed to discover screens:", error);
-      // Fallback to default screens
-      this.validScreens = new Set(["Auth", "Home"]);
-    }
+        this.validScreens = allScreens;
+
+        logger.info(
+          `Discovered ${allScreens.size} screens:`,
+          Array.from(allScreens)
+        );
+
+        // If no screens discovered, fallback to defaults
+        if (allScreens.size === 0) {
+          logger.warn("No screens discovered, using fallback defaults");
+          this.validScreens = new Set(["Auth", "Home"]);
+        }
+
+        return this.validScreens;
+      } catch (error) {
+        logger.error("Failed to discover screens:", error);
+        // Fallback to default screens
+        this.validScreens = new Set(["Auth", "Home"]);
+        return this.validScreens;
+      }
+    });
   }
 
   /**
    * Discover configuration files
    */
   async discoverConfigFiles() {
-    try {
-      await this.ensureDirectoryExists(CONFIG_DIR);
-      const files = await fs.readdir(CONFIG_DIR);
+    await this.ensureDirectoryExists(CONFIG_DIR);
+    const files = await fs.readdir(CONFIG_DIR);
 
-      return files
-        .filter((file) => file.endsWith(".json"))
-        .map((file) => path.basename(file, ".json"));
-    } catch (error) {
-      logger.warn("Failed to discover config files:", error);
-      return [];
-    }
+    return files
+      .filter((file) => file.endsWith(".json"))
+      .map((file) => path.basename(file, ".json"));
   }
 
   /**
    * Discover schema files
    */
   async discoverSchemaFiles() {
-    try {
-      await this.ensureDirectoryExists(SCHEMA_DIR);
-      const files = await fs.readdir(SCHEMA_DIR);
+    await this.ensureDirectoryExists(SCHEMA_DIR);
+    const files = await fs.readdir(SCHEMA_DIR);
 
-      return files
-        .filter((file) => file.endsWith(".schema.json"))
-        .map((file) => path.basename(file, ".schema.json"));
-    } catch (error) {
-      logger.warn("Failed to discover schema files:", error);
-      return [];
-    }
+    return files
+      .filter((file) => file.endsWith(".schema.json"))
+      .map((file) => {
+        // Handle different naming patterns
+        let screenName = path.basename(file, ".schema.json");
+
+        // Convert dots to proper casing (e.g., "Choose.language" -> "ChooseLanguage")
+        if (screenName.includes(".")) {
+          screenName = screenName
+            .split(".")
+            .map(
+              (part) =>
+                part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
+            )
+            .join("");
+        }
+
+        return screenName;
+      });
   }
 
   /**
    * Discover template files
    */
   async discoverTemplateFiles() {
-    try {
-      await this.ensureDirectoryExists(TEMPLATES_DIR);
-      const files = await fs.readdir(TEMPLATES_DIR);
+    await this.ensureDirectoryExists(TEMPLATES_DIR);
+    const files = await fs.readdir(TEMPLATES_DIR);
 
-      return files
-        .filter((file) => file.endsWith(".template.json"))
-        .map((file) => path.basename(file, ".template.json"));
-    } catch (error) {
-      logger.warn("Failed to discover template files:", error);
-      return [];
-    }
+    return files
+      .filter((file) => file.endsWith(".template.json"))
+      .map((file) => {
+        // Handle different naming patterns
+        let screenName = path.basename(file, ".template.json");
+
+        // Convert dots to proper casing (e.g., "Choose.language" -> "ChooseLanguage")
+        if (screenName.includes(".")) {
+          screenName = screenName
+            .split(".")
+            .map(
+              (part) =>
+                part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
+            )
+            .join("");
+        }
+
+        return screenName;
+      });
   }
 
   /**
@@ -255,7 +301,20 @@ class EnhancedConfigManager {
 
       for (const schemaFile of schemaFiles) {
         if (schemaFile.endsWith(".schema.json")) {
-          const screenName = path.basename(schemaFile, ".schema.json");
+          // Handle different naming patterns
+          let screenName = path.basename(schemaFile, ".schema.json");
+
+          // Convert dots to proper casing (e.g., "Choose.language" -> "ChooseLanguage")
+          if (screenName.includes(".")) {
+            screenName = screenName
+              .split(".")
+              .map(
+                (part) =>
+                  part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
+              )
+              .join("");
+          }
+
           const schemaPath = path.join(SCHEMA_DIR, schemaFile);
 
           try {
@@ -291,7 +350,20 @@ class EnhancedConfigManager {
 
       for (const templateFile of templateFiles) {
         if (templateFile.endsWith(".template.json")) {
-          const screenName = path.basename(templateFile, ".template.json");
+          // Handle different naming patterns
+          let screenName = path.basename(templateFile, ".template.json");
+
+          // Convert dots to proper casing (e.g., "Choose.language" -> "ChooseLanguage")
+          if (screenName.includes(".")) {
+            screenName = screenName
+              .split(".")
+              .map(
+                (part) =>
+                  part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
+              )
+              .join("");
+          }
+
           const templatePath = path.join(TEMPLATES_DIR, templateFile);
 
           try {
