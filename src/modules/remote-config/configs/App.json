@@ -4,7 +4,7 @@
     "screenTitle": "Labor2Hire App",
     "description": "Main application entry point configuration",
     "version": "1.0.0",
-    "lastUpdated": "2025-07-27T09:52:29.399Z"
+    "lastUpdated": "2025-07-27T11:52:55.609Z"
   },
   "globalStyles": {
     "backgroundColor": "#ffffff",
@@ -264,10 +264,10 @@
   "appConfig": {
     "name": "Labor2Hire",
     "version": "1.0.0",
-    "buildNumber": "{{BUILD_NUMBER}}",
+    "buildNumber": "dev",
     "environment": "development",
-    "apiBaseUrl": "{{API_BASE_URL}}",
-    "websocketUrl": "{{WEBSOCKET_URL}}",
+    "apiBaseUrl": "http://localhost:5002",
+    "websocketUrl": "ws://localhost:5002",
     "theme": {
       "primaryColor": "#007bff",
       "secondaryColor": "#28a745",
@@ -290,7 +290,7 @@
   },
   "_metadata": {
     "source": "template",
-    "loadedAt": "2025-07-27T09:52:29.402Z",
+    "loadedAt": "2025-07-27T11:52:55.611Z",
     "templatePath": "E:\\labor2Hire-backend\\labor2Hire-Backend\\src\\modules\\remote-config\\templates\\App.template.json"
   }
 }

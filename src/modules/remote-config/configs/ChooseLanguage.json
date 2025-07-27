@@ -4,7 +4,7 @@
     "screenTitle": "Choose Your Language",
     "description": "Language selection screen with dynamic components",
     "version": "1.0.0",
-    "lastUpdated": "2025-07-27T09:52:29.438Z"
+    "lastUpdated": "2025-07-27T11:52:55.794Z"
   },
   "globalStyles": {
     "backgroundColor": "#ffffff",
@@ -297,7 +297,7 @@
   },
   "_metadata": {
     "source": "template",
-    "loadedAt": "2025-07-27T09:52:29.438Z",
+    "loadedAt": "2025-07-27T11:52:55.795Z",
     "templatePath": "E:\\labor2Hire-backend\\labor2Hire-Backend\\src\\modules\\remote-config\\templates\\ChooseLanguage.template.json"
   }
 }
