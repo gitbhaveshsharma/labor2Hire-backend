@@ -5,7 +5,7 @@
   "properties": {
     "screenType": {
       "type": "string",
-      "enum": ["main-app"]
+      "enum": ["App"]
     },
     "metadata": {
       "type": "object",

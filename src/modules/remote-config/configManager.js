@@ -42,6 +42,7 @@ class EnhancedConfigManager {
     this.configSchemas = new Map();
     this.configTemplates = new Map();
     this.circuitBreaker = new Map();
+    this.initialLoadComplete = false;
     this.retryConfig = {
       maxRetries: 3,
       baseDelay: 1000,
@@ -54,6 +55,90 @@ class EnhancedConfigManager {
 
     // Initialize circuit breakers
     this.initializeCircuitBreakers();
+
+    // Initialize debounced reloads map
+    this.debouncedReloads = new Map();
+
+    // Start watching for config file changes
+    this.watchConfigs();
+  }
+
+  /**
+   * Watch for changes in the configuration directory
+   */
+  watchConfigs() {
+    try {
+      // Skip file watching in development to prevent restart loops
+      if (process.env.NODE_ENV === "development") {
+        logger.info(
+          "File watching disabled in development mode to prevent restart loops"
+        );
+        return;
+      }
+
+      const watcher = fs.watch(CONFIG_DIR, (eventType, filename) => {
+        if (filename && eventType === "change") {
+          this.handleFileChange(filename);
+        }
+      });
+
+      if (watcher && watcher.on) {
+        watcher.on("error", (error) => {
+          logger.error("File watcher error:", error);
+        });
+      }
+    } catch (error) {
+      logger.error("Failed to start file watcher:", error);
+    }
+  }
+
+  /**
+   * Handle file change events
+   */
+  handleFileChange(filename) {
+    const screenName = path.basename(filename, ".json");
+
+    if (this.validScreens.has(screenName)) {
+      // Debounce the reload to avoid multiple reloads in a short time
+      if (this.debouncedReloads.has(screenName)) {
+        clearTimeout(this.debouncedReloads.get(screenName));
+      }
+
+      const timeout = setTimeout(async () => {
+        logger.info(
+          `Configuration file changed for screen: ${screenName}. Reloading...`
+        );
+
+        try {
+          // Clear cache first to ensure fresh load from file
+          await this.clearScreenCache(screenName);
+
+          // Force reload from file (bypass cache)
+          const config = await this.forceReloadFromFile(screenName, {
+            source: "file-watcher",
+          });
+
+          // Broadcast the update to WebSocket clients
+          const { configWebSocketServer } = await import(
+            "./websocketServer.js"
+          );
+          await configWebSocketServer.broadcastConfigUpdate(screenName, config);
+
+          logger.info(
+            `Configuration successfully reloaded for screen: ${screenName}`
+          );
+        } catch (error) {
+          logger.error(
+            `Failed to reload configuration for screen ${screenName}:`,
+            error
+          );
+        }
+
+        this.debouncedReloads.delete(screenName);
+      }, 500); // 500ms debounce delay
+
+      this.debouncedReloads.set(screenName, timeout);
+    }
   }
 
   /**
@@ -96,7 +181,11 @@ class EnhancedConfigManager {
 
         for (const screen of this.validScreens) {
           try {
-            const config = await this.loadScreenConfigWithFallback(screen);
+            // Force load from file (bypass cache during startup)
+            const config = await this.loadScreenConfigWithFallback(
+              screen,
+              true
+            );
             loadedConfigs.set(screen, config);
 
             // Cache in Redis with distribution
@@ -134,6 +223,9 @@ class EnhancedConfigManager {
           screensLoaded: Array.from(loadedConfigs.keys()),
           totalConfigs: loadedConfigs.size,
         });
+
+        // Mark initial load as complete to allow file saving
+        this.initialLoadComplete = true;
 
         return this.configStore;
       } catch (error) {
@@ -389,13 +481,16 @@ class EnhancedConfigManager {
   /**
    * Load screen configuration with fallback mechanisms
    */
-  async loadScreenConfigWithFallback(screen) {
+  async loadScreenConfigWithFallback(screen, forceReload = false) {
     return this.executeWithRetry(async () => {
-      // Try to load from cache first (distributed cache)
-      const cachedConfig = await this.getCachedConfiguration(screen);
-      if (cachedConfig) {
-        logger.debug(`Loaded ${screen} configuration from cache`);
-        return cachedConfig;
+      // Skip cache if force reload is requested
+      if (!forceReload) {
+        // Try to load from cache first (distributed cache)
+        const cachedConfig = await this.getCachedConfiguration(screen);
+        if (cachedConfig) {
+          logger.debug(`Loaded ${screen} configuration from cache`);
+          return cachedConfig;
+        }
       }
 
       // Try to load from file
@@ -404,6 +499,10 @@ class EnhancedConfigManager {
         if (fileConfig) {
           // Validate against schema
           await this.validateConfiguration(screen, fileConfig);
+
+          // Cache the fresh configuration
+          await this.cacheConfiguration(screen, fileConfig);
+
           return fileConfig;
         }
       } catch (error) {
@@ -414,6 +513,10 @@ class EnhancedConfigManager {
       const templateConfig = await this.createConfigFromTemplate(screen);
       if (templateConfig) {
         logger.info(`Created ${screen} configuration from template`);
+
+        // Cache the template-generated configuration
+        await this.cacheConfiguration(screen, templateConfig);
+
         return templateConfig;
       }
 
@@ -429,7 +532,25 @@ class EnhancedConfigManager {
     return this.executeWithCircuitBreaker("redis", async () => {
       try {
         const cacheKey = `${CACHE_PREFIX}${screen}`;
-        return await cache.get(cacheKey);
+        const cachedData = await cache.get(cacheKey);
+
+        if (cachedData) {
+          logger.debug(`Cache HIT for screen: ${screen}`);
+
+          // Add cache metadata
+          if (typeof cachedData === "object" && cachedData !== null) {
+            cachedData._metadata = {
+              ...cachedData._metadata,
+              source: "cache",
+              cachedAt: new Date().toISOString(),
+            };
+          }
+
+          return cachedData;
+        } else {
+          logger.debug(`Cache MISS for screen: ${screen}`);
+          return null;
+        }
       } catch (error) {
         logger.warn(`Failed to get cached config for ${screen}:`, error);
         return null;
@@ -446,9 +567,21 @@ class EnhancedConfigManager {
         const cacheKey = `${CACHE_PREFIX}${screen}`;
         const ttl = this.getCacheTtl(screen);
 
-        await cache.set(cacheKey, config, ttl);
+        // Create a copy of config for caching to avoid modifying original
+        const configToCache = JSON.parse(JSON.stringify(config));
 
-        logger.debug(`Cached configuration for ${screen}`);
+        // Add cache metadata
+        configToCache._metadata = {
+          ...configToCache._metadata,
+          source: "file",
+          cachedAt: new Date().toISOString(),
+          cacheKey,
+          ttl,
+        };
+
+        await cache.set(cacheKey, configToCache, ttl);
+
+        logger.debug(`Cached configuration for ${screen} with TTL ${ttl}s`);
       } catch (error) {
         logger.warn(`Failed to cache config for ${screen}:`, error);
       }
@@ -582,6 +715,16 @@ class EnhancedConfigManager {
     const isValid = schemaData.validator(config);
     if (!isValid) {
       const errors = schemaData.validator.errors;
+
+      // In development mode, be more lenient with validation to prevent restart loops
+      if (process.env.NODE_ENV === "development") {
+        logger.warn(
+          `Schema validation failed for ${screen} (development mode - continuing):`,
+          errors
+        );
+        return true;
+      }
+
       logger.error(`Schema validation failed for ${screen}:`, errors);
       throw new Error(
         `Configuration validation failed: ${JSON.stringify(errors)}`
@@ -723,10 +866,13 @@ class EnhancedConfigManager {
           // Update in-memory store
           this.configStore.set(screen, updatedConfig);
 
-          // Save to file
+          // Save to file first
           await this.saveConfigToFile(screen, updatedConfig);
 
-          // Update cache
+          // Clear cache to ensure fresh data on next request
+          await this.clearScreenCache(screen);
+
+          // Update cache with new data
           await this.cacheConfiguration(screen, updatedConfig);
 
           // Audit log
@@ -814,10 +960,13 @@ class EnhancedConfigManager {
           // Update in-memory store
           this.configStore.set(screen, updatedConfig);
 
-          // Save to file
+          // Save to file first
           await this.saveConfigToFile(screen, updatedConfig);
 
-          // Update cache
+          // Clear cache to ensure fresh data on next request
+          await this.clearScreenCache(screen);
+
+          // Update cache with new data
           await this.cacheConfiguration(screen, updatedConfig);
 
           // Audit log
@@ -1082,6 +1231,14 @@ class EnhancedConfigManager {
    */
   async saveConfigToFile(screen, config) {
     return this.executeWithCircuitBreaker("filesystem", async () => {
+      // Skip file saving in development during startup to prevent restart loops
+      if (process.env.NODE_ENV === "development" && !this.initialLoadComplete) {
+        logger.debug(
+          `Skipping file save for ${screen} during initial development load`
+        );
+        return;
+      }
+
       const configPath = path.join(CONFIG_DIR, `${screen}.json`);
 
       try {
@@ -1192,15 +1349,59 @@ class EnhancedConfigManager {
   }
 
   /**
+   * Force reload screen configuration from file (bypass cache)
+   */
+  async forceReloadFromFile(screen, context = {}) {
+    try {
+      logger.info(
+        `Force reloading configuration from file for screen: ${screen}`
+      );
+
+      // Load fresh configuration from file
+      const config = await this.loadScreenConfigWithFallback(screen, true);
+
+      // Update in-memory store
+      this.configStore.set(screen, config);
+
+      // Update cache with fresh data
+      await this.cacheConfiguration(screen, config);
+
+      // Audit log
+      await configAuditLogger.logConfigChange(
+        "config-force-reload",
+        {
+          screen,
+          version: config.version,
+          source: "file-force-reload",
+        },
+        context
+      );
+
+      logger.info(`Force reload completed for screen: ${screen}`);
+      return config;
+    } catch (error) {
+      logger.error(
+        `Failed to force reload configuration for screen ${screen}:`,
+        error
+      );
+      throw error;
+    }
+  }
+
+  /**
    * Reload screen configuration
    */
   async reloadScreenConfig(screen, context = {}) {
     try {
-      // Clear cache first
+      logger.info(`Reloading configuration for screen: ${screen}`);
+
+      // Clear cache first to ensure fresh load
       await this.clearScreenCache(screen);
 
       // Load fresh configuration
-      const config = await this.loadScreenConfigWithFallback(screen);
+      const config = await this.loadScreenConfigWithFallback(screen, true);
+
+      // Update in-memory store
       this.configStore.set(screen, config);
 
       // Update cache
@@ -1243,10 +1444,100 @@ class EnhancedConfigManager {
   }
 
   /**
+   * Clear all configuration cache
+   */
+  async clearAllCache() {
+    return this.executeWithCircuitBreaker("redis", async () => {
+      try {
+        // Get all cache keys for configurations
+        const keys = [];
+        for (const screen of this.validScreens) {
+          keys.push(`${CACHE_PREFIX}${screen}`);
+        }
+
+        if (keys.length > 0) {
+          await Promise.all(keys.map((key) => cache.del(key)));
+          logger.info(`Cleared cache for ${keys.length} screens`);
+        }
+
+        // Also clear metadata cache
+        await cache.del(CACHE_METADATA_KEY);
+        await cache.del(CACHE_STATS_KEY);
+
+        logger.info("All configuration cache cleared");
+      } catch (error) {
+        logger.warn("Failed to clear all cache:", error);
+      }
+    });
+  }
+
+  /**
+   * Invalidate and refresh cache for a specific screen
+   */
+  async invalidateAndRefreshCache(screen) {
+    try {
+      // Clear existing cache
+      await this.clearScreenCache(screen);
+
+      // Load fresh configuration
+      const config = await this.loadScreenConfigWithFallback(screen, true);
+
+      // Update in-memory store
+      this.configStore.set(screen, config);
+
+      // Cache the fresh configuration
+      await this.cacheConfiguration(screen, config);
+
+      logger.info(`Cache invalidated and refreshed for screen: ${screen}`);
+      return config;
+    } catch (error) {
+      logger.error(
+        `Failed to invalidate and refresh cache for screen ${screen}:`,
+        error
+      );
+      throw error;
+    }
+  }
+
+  /**
    * Get valid screens
    */
   get VALID_SCREENS() {
     return Array.from(this.validScreens);
+  }
+
+  /**
+   * Get cache status for all screens
+   */
+  async getCacheStatus() {
+    const cacheStatus = {};
+
+    for (const screen of this.validScreens) {
+      try {
+        const cacheKey = `${CACHE_PREFIX}${screen}`;
+        const exists = await cache.exists(cacheKey);
+        const cached = exists ? await cache.get(cacheKey) : null;
+
+        cacheStatus[screen] = {
+          isCached: exists,
+          cacheKey,
+          lastCachedAt: cached?._metadata?.cachedAt || null,
+          source: cached?._metadata?.source || null,
+          ttl: cached?._metadata?.ttl || null,
+        };
+      } catch (error) {
+        cacheStatus[screen] = {
+          isCached: false,
+          error: error.message,
+        };
+      }
+    }
+
+    return {
+      cacheStatus,
+      redisConnected: cache.isConnected ? cache.isConnected() : false,
+      timestamp: new Date().toISOString(),
+    };
   }
 }
 

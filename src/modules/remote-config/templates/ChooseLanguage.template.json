@@ -7,10 +7,10 @@
     "lastUpdated": "{{TIMESTAMP}}"
   },
   "globalStyles": {
-    "backgroundColor": "#ffffff",
+    "backgroundColor": "#f8f9fa",
     "statusBar": {
       "barStyle": "dark-content",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#f8f9fa"
     }
   },
   "components": [
@@ -18,16 +18,14 @@
       "type": "SafeAreaView",
       "style": {
         "flex": 1,
-        "alignItems": "center",
-        "justifyContent": "center",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#f8f9fa"
       },
       "children": [
         {
           "type": "StatusBar",
           "props": {
             "barStyle": "dark-content",
-            "backgroundColor": "#ffffff"
+            "backgroundColor": "#f8f9fa"
           }
         },
         {

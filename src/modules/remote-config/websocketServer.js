@@ -34,7 +34,19 @@ export class ConfigWebSocketServer {
       // Configure Socket.IO with CORS and security options
       this.io = new Server(server, {
         cors: {
-          origin: process.env.ALLOWED_ORIGINS?.split(",") || "*",
+          origin:
+            process.env.NODE_ENV === "production"
+              ? process.env.ALLOWED_ORIGINS?.split(",") || []
+              : [
+                  "http://localhost:3000",
+                  "http://localhost:5173",
+                  "http://192.168.0.105:5001",
+                  "http://192.168.0.105:3000",
+                  // Allow any localhost port for development
+                  /^http:\/\/localhost:\d+$/,
+                  // Allow any IP in the 192.168.0.x range for local network
+                  /^http:\/\/192\.168\.0\.\d+:\d+$/,
+                ],
           methods: ["GET", "POST"],
           credentials: true,
         },

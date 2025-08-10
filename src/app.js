@@ -220,7 +220,16 @@ class Application {
         origin:
           this.environment === ENVIRONMENTS.PRODUCTION
             ? process.env.ALLOWED_ORIGINS?.split(",") || []
-            : ["http://localhost:3000", "http://localhost:5173"],
+            : [
+                "http://localhost:3000",
+                "http://localhost:5173",
+                "http://192.168.0.105:5001",
+                "http://192.168.0.105:3000",
+                // Allow any localhost port for development
+                /^http:\/\/localhost:\d+$/,
+                // Allow any IP in the 192.168.0.x range for local network
+                /^http:\/\/192\.168\.0\.\d+:\d+$/,
+              ],
         credentials: true,
         optionsSuccessStatus: 200,
       })
@@ -425,7 +434,7 @@ class Application {
     try {
       await this.initialize();
 
-      this.server.listen(this.port, () => {
+      this.server.listen(this.port, "0.0.0.0", () => {
         logger.info(`Labor2Hire server started successfully`, {
           port: this.port,
           environment: this.environment,

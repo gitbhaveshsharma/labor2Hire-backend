@@ -4,9 +4,9 @@
  * @author Labor2Hire Team
  */
 
-import { createClient } from 'redis';
-import { logger } from './logger.js';
-import { ENVIRONMENTS } from '../constants/index.js';
+import { createClient } from "redis";
+import { logger } from "./logger.js";
+import { ENVIRONMENTS } from "../constants/index.js";
 
 /**
  * Redis client configuration and management
@@ -25,13 +25,13 @@ class RedisConfig {
    */
   _getConnectionOptions() {
     const options = {
-      url: process.env.REDIS_URL || 'redis://localhost:6379',
+      url: process.env.REDIS_URL || "redis://localhost:6379",
       socket: {
         connectTimeout: 10000,
         lazyConnect: true,
         reconnectStrategy: (retries) => {
           if (retries > 3) {
-            logger.error('Redis reconnection failed after 3 attempts');
+            logger.error("Redis reconnection failed after 3 attempts");
             return false;
           }
           return Math.min(retries * 50, 1000);
@@ -46,7 +46,7 @@ class RedisConfig {
 
     // Additional options for production
     if (process.env.NODE_ENV === ENVIRONMENTS.PRODUCTION) {
-      options.socket.tls = process.env.REDIS_TLS === 'true';
+      options.socket.tls = process.env.REDIS_TLS === "true";
     }
 
     return options;
@@ -59,30 +59,29 @@ class RedisConfig {
   async connect() {
     try {
       if (this.isConnected && this.client?.isOpen) {
-        logger.warn('Redis connection already established');
+        logger.warn("Redis connection already established");
         return;
       }
 
-      logger.info('Connecting to Redis...', {
+      logger.info("Connecting to Redis...", {
         url: this.connectionOptions.url,
         environment: process.env.NODE_ENV,
       });
 
       this.client = createClient(this.connectionOptions);
-      
+
       // Set up event listeners
       this._setupEventListeners();
 
       await this.client.connect();
       this.isConnected = true;
 
-      logger.info('Successfully connected to Redis', {
-        host: this.client.options?.socket?.host || 'localhost',
+      logger.info("Successfully connected to Redis", {
+        host: this.client.options?.socket?.host || "localhost",
         port: this.client.options?.socket?.port || 6379,
       });
-
     } catch (error) {
-      logger.error('Failed to connect to Redis', {
+      logger.error("Failed to connect to Redis", {
         error: error.message,
         stack: error.stack,
       });
@@ -97,15 +96,15 @@ class RedisConfig {
   async disconnect() {
     try {
       if (!this.client || !this.isConnected) {
-        logger.warn('No active Redis connection to close');
+        logger.warn("No active Redis connection to close");
         return;
       }
 
       await this.client.quit();
       this.isConnected = false;
-      logger.info('Successfully disconnected from Redis');
+      logger.info("Successfully disconnected from Redis");
     } catch (error) {
-      logger.error('Error disconnecting from Redis', {
+      logger.error("Error disconnecting from Redis", {
         error: error.message,
       });
       throw error;
@@ -118,7 +117,7 @@ class RedisConfig {
    */
   getClient() {
     if (!this.isConnected || !this.client?.isOpen) {
-      logger.warn('Redis client is not connected');
+      logger.warn("Redis client is not connected");
       return null;
     }
     return this.client;
@@ -140,9 +139,9 @@ class RedisConfig {
     try {
       if (!this.isConnected || !this.client?.isOpen) {
         return {
-          status: 'disconnected',
+          status: "disconnected",
           isHealthy: false,
-          error: 'Redis client not connected',
+          error: "Redis client not connected",
         };
       }
 
@@ -151,15 +150,15 @@ class RedisConfig {
       const responseTime = Date.now() - start;
 
       return {
-        status: 'connected',
+        status: "connected",
         isHealthy: true,
         responseTime: `${responseTime}ms`,
-        host: this.client.options?.socket?.host || 'localhost',
+        host: this.client.options?.socket?.host || "localhost",
         port: this.client.options?.socket?.port || 6379,
       };
     } catch (error) {
       return {
-        status: 'error',
+        status: "error",
         isHealthy: false,
         error: error.message,
       };
@@ -173,29 +172,29 @@ class RedisConfig {
   _setupEventListeners() {
     if (!this.client) return;
 
-    this.client.on('connect', () => {
-      logger.info('Redis client connected');
+    this.client.on("connect", () => {
+      logger.info("Redis client connected");
     });
 
-    this.client.on('ready', () => {
-      logger.info('Redis client ready');
+    this.client.on("ready", () => {
+      logger.info("Redis client ready");
       this.isConnected = true;
     });
 
-    this.client.on('error', (error) => {
-      logger.error('Redis client error', {
+    this.client.on("error", (error) => {
+      logger.error("Redis client error", {
         error: error.message,
       });
       this.isConnected = false;
     });
 
-    this.client.on('end', () => {
-      logger.warn('Redis client connection ended');
+    this.client.on("end", () => {
+      logger.warn("Redis client connection ended");
       this.isConnected = false;
     });
 
-    this.client.on('reconnecting', () => {
-      logger.info('Redis client reconnecting...');
+    this.client.on("reconnecting", () => {
+      logger.info("Redis client reconnecting...");
     });
   }
 
@@ -209,17 +208,18 @@ class RedisConfig {
   async set(key, value, ttl = 3600) {
     try {
       if (!this.isRedisConnected()) {
-        logger.warn('Redis not connected, skipping cache set');
+        logger.warn("Redis not connected, skipping cache set");
         return false;
       }
 
-      const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
+      const stringValue =
+        typeof value === "string" ? value : JSON.stringify(value);
       await this.client.setEx(key, ttl, stringValue);
-      
-      logger.debug('Cache set successful', { key, ttl });
+
+      logger.debug("Cache set successful", { key, ttl });
       return true;
     } catch (error) {
-      logger.error('Error setting cache', {
+      logger.error("Error setting cache", {
         key,
         error: error.message,
       });
@@ -236,7 +236,7 @@ class RedisConfig {
   async get(key, parseJson = true) {
     try {
       if (!this.isRedisConnected()) {
-        logger.warn('Redis not connected, skipping cache get');
+        logger.warn("Redis not connected, skipping cache get");
         return null;
       }
 
@@ -253,7 +253,7 @@ class RedisConfig {
 
       return value;
     } catch (error) {
-      logger.error('Error getting cache', {
+      logger.error("Error getting cache", {
         key,
         error: error.message,
       });
@@ -269,15 +269,15 @@ class RedisConfig {
   async del(key) {
     try {
       if (!this.isRedisConnected()) {
-        logger.warn('Redis not connected, skipping cache delete');
+        logger.warn("Redis not connected, skipping cache delete");
         return false;
       }
 
       await this.client.del(key);
-      logger.debug('Cache delete successful', { key });
+      logger.debug("Cache delete successful", { key });
       return true;
     } catch (error) {
-      logger.error('Error deleting cache', {
+      logger.error("Error deleting cache", {
         key,
         error: error.message,
       });
@@ -299,7 +299,7 @@ class RedisConfig {
       const exists = await this.client.exists(key);
       return exists === 1;
     } catch (error) {
-      logger.error('Error checking cache existence', {
+      logger.error("Error checking cache existence", {
         key,
         error: error.message,
       });
@@ -313,7 +313,7 @@ class RedisConfig {
    */
   async flushAll() {
     if (process.env.NODE_ENV === ENVIRONMENTS.PRODUCTION) {
-      throw new Error('Cannot flush Redis in production environment');
+      throw new Error("Cannot flush Redis in production environment");
     }
 
     try {
@@ -322,10 +322,10 @@ class RedisConfig {
       }
 
       await this.client.flushAll();
-      logger.info('Redis cache flushed successfully');
+      logger.info("Redis cache flushed successfully");
       return true;
     } catch (error) {
-      logger.error('Error flushing Redis cache', {
+      logger.error("Error flushing Redis cache", {
         error: error.message,
       });
       return false;
@@ -377,6 +377,7 @@ export const cache = {
   del: (key) => redisConfig.del(key),
   exists: (key) => redisConfig.exists(key),
   flushAll: () => redisConfig.flushAll(),
+  isConnected: () => redisConfig.isRedisConnected(),
 };
 
 export default redisConfig;

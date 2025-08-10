@@ -1128,6 +1128,102 @@ router.post(
 );
 
 /**
+ * @route GET /api/config/cache/status
+ * @desc Get cache status for all screens
+ * @access Private
+ */
+router.get(
+  "/cache/status",
+  authorizeConfigOperation(["read"]),
+  async (req, res) => {
+    try {
+      const cacheStatus = await enhancedConfigManager.getCacheStatus();
+
+      res.json({
+        success: true,
+        message: "Cache status retrieved successfully",
+        data: cacheStatus,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      logger.error("Failed to get cache status:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to retrieve cache status",
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+);
+
+/**
+ * @route POST /api/config/cache/clear
+ * @desc Clear configuration cache for troubleshooting
+ * @access Private
+ */
+router.post(
+  "/cache/clear",
+  authorizeConfigOperation(["write", "admin"]),
+  async (req, res) => {
+    try {
+      const { screen } = req.body;
+
+      if (screen) {
+        // Clear cache for specific screen
+        await enhancedConfigManager.clearScreenCache(screen);
+
+        // Invalidate and refresh cache
+        const refreshedConfig =
+          await enhancedConfigManager.invalidateAndRefreshCache(screen);
+
+        // Broadcast update to WebSocket clients
+        await configWebSocketServer.broadcastConfigUpdate(
+          screen,
+          refreshedConfig
+        );
+
+        res.json({
+          success: true,
+          message: `Cache cleared and refreshed for screen: ${screen}`,
+          data: {
+            screen,
+            refreshedConfig,
+            timestamp: new Date().toISOString(),
+          },
+        });
+      } else {
+        // Clear all cache
+        await enhancedConfigManager.clearAllCache();
+
+        // Reload all configurations
+        await enhancedConfigManager.loadAllConfigs();
+
+        // Broadcast full sync to WebSocket clients
+        await configWebSocketServer.broadcastFullConfigSync();
+
+        res.json({
+          success: true,
+          message: "All configuration cache cleared and reloaded",
+          data: {
+            clearedAt: new Date().toISOString(),
+            totalScreens: enhancedConfigManager.VALID_SCREENS.length,
+          },
+        });
+      }
+    } catch (error) {
+      logger.error("Failed to clear configuration cache:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to clear configuration cache",
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+);
+
+/**
  * @route GET /api/config/health/detailed
  * @desc Get detailed health status with all system components
  * @access Private

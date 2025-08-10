@@ -494,7 +494,8 @@
             "shareContent",
             "playSound",
             "vibrate",
-            "authenticate"
+            "authenticate",
+            "retryLoad"
           ],
           "description": "Type of action to execute"
         },

@@ -144,6 +144,21 @@ describe("Remote Configuration System", () => {
         expect(breaker.state).toBe("OPEN");
       });
     });
+
+    describe("File Watcher", () => {
+      it("should reload configuration on file change", async () => {
+        const screenName = "Auth";
+        const reloadSpy = jest.spyOn(configManager, "reloadScreenConfig");
+
+        // Simulate a file change
+        configManager.handleFileChange(`${screenName}.json`);
+
+        // Wait for the debounced reload
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        expect(reloadSpy).toHaveBeenCalledWith(screenName, { source: 'file-watcher' });
+      });
+    });
   });
 
   describe("WebSocket Server", () => {

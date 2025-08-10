@@ -18,11 +18,26 @@ export { configManager, configWebSocketServer, configRoutes };
 // Module initialization function
 export async function initializeRemoteConfigModule(server) {
   try {
-    // Load all configurations into memory
+    console.log("🔧 Initializing Remote Configuration Module...");
+
+    // Clear any existing configuration cache to ensure fresh start
+    try {
+      await configManager.clearAllCache();
+      console.log("🗑️ Cleared existing configuration cache");
+    } catch (cacheError) {
+      console.warn(
+        "⚠️ Could not clear cache (Redis might not be available):",
+        cacheError.message
+      );
+    }
+
+    // Load all configurations into memory (will bypass cache and load fresh from files)
     await configManager.loadAllConfigs();
+    console.log("📁 Loaded configurations from files");
 
     // Initialize WebSocket server
     configWebSocketServer.initialize(server);
+    console.log("🔌 WebSocket server initialized");
 
     console.log("✅ Remote Configuration Module initialized successfully");
 

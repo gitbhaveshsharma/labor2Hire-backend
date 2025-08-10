@@ -3,21 +3,58 @@
   "title": "Authentication Screen Configuration Schema",
   "type": "object",
   "properties": {
-    "screenTitle": {
+    "screenType": {
       "type": "string",
-      "minLength": 1,
-      "maxLength": 100,
-      "description": "Title displayed on the authentication screen"
+      "enum": ["Auth"],
+      "description": "Screen type identifier"
     },
-    "backgroundColor": {
-      "type": "string",
-      "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
-      "description": "Background color in hex format"
+    "metadata": {
+      "type": "object",
+      "required": ["screenTitle", "description", "version", "lastUpdated"],
+      "properties": {
+        "screenTitle": {
+          "type": "string",
+          "description": "Title displayed on the authentication screen"
+        },
+        "description": {
+          "type": "string",
+          "description": "Screen description"
+        },
+        "version": {
+          "type": "string",
+          "description": "Version number"
+        },
+        "lastUpdated": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp of last update"
+        }
+      }
     },
-    "primaryColor": {
-      "type": "string",
-      "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
-      "description": "Primary color in hex format"
+    "globalStyles": {
+      "type": "object",
+      "properties": {
+        "backgroundColor": {
+          "type": "string",
+          "description": "Background color"
+        },
+        "statusBar": {
+          "type": "object",
+          "properties": {
+            "barStyle": { "type": "string" },
+            "backgroundColor": { "type": "string" }
+          }
+        }
+      }
+    },
+    "components": {
+      "type": "array",
+      "description": "Array of UI components",
+      "items": { "$ref": "#/definitions/Component" }
+    },
+    "errorState": {
+      "$ref": "#/definitions/Component",
+      "description": "Error state component"
     },
     "secondaryColor": {
       "type": "string",

@@ -1,0 +1,12 @@
+{
+  "ignore": [
+    "src/modules/remote-config/configs/*.json",
+    "src/modules/remote-config/templates/*.json",
+    "logs/*",
+    "*.log"
+  ],
+  "ext": "js,json,mjs",
+  "env": {
+    "NODE_ENV": "development"
+  }
+}
