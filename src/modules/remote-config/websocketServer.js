@@ -31,7 +31,22 @@ export class ConfigWebSocketServer {
    */
   initialize(server) {
     try {
-      // Configure Socket.IO with CORS and security options
+      // Close existing Socket.IO server if it exists
+      if (this.io) {
+        logger.info(
+          "Closing existing WebSocket server before reinitializing..."
+        );
+        this.disconnectAllClients("Server restarting");
+        this.io.close();
+        this.io = null;
+      }
+
+      // Clear connected clients map on restart
+      connectedClients.clear();
+      this.connectionCount = 0;
+      this.broadcastCount = 0;
+
+      // Configure Socket.IO with optimized settings for stability
       this.io = new Server(server, {
         cors: {
           origin:
@@ -50,17 +65,38 @@ export class ConfigWebSocketServer {
           methods: ["GET", "POST"],
           credentials: true,
         },
-        pingTimeout: 60000,
-        pingInterval: 25000,
+        // Optimized ping settings for stability
+        pingTimeout: 60000, // Increased back to 60s for stability
+        pingInterval: 25000, // Increased back to 25s for stability
+        upgradeTimeout: 30000, // Allow more time for transport upgrades
         maxHttpBufferSize: 1e6, // 1MB limit
-        transports: ["websocket", "polling"],
+        transports: ["polling", "websocket"], // Prefer polling first for reliability
         path: "/config-socket",
+        allowEIO3: true, // Allow Engine.IO v3 clients
+        serveClient: false, // Don't serve client files
+        // Additional stability settings
+        destroyUpgrade: false, // Don't destroy upgrade requests
+        destroyUpgradeTimeout: 1000,
+        allowUpgrades: true, // Allow transport upgrades
+        cookie: false, // Disable cookies for simplicity
+        httpCompression: true, // Enable compression
+        perMessageDeflate: true, // Enable message compression
       });
 
       // Setup connection handlers
       this.setupConnectionHandlers();
 
-      logger.info("Configuration WebSocket server initialized successfully");
+      // Add server restart notification after a brief delay
+      setTimeout(() => {
+        this.notifyServerRestart();
+      }, 1000);
+
+      logger.info("Configuration WebSocket server initialized successfully", {
+        pingTimeout: 60000,
+        pingInterval: 25000,
+        transports: ["polling", "websocket"],
+        upgradeTimeout: 30000,
+      });
     } catch (error) {
       logger.error("Failed to initialize WebSocket server:", error);
       throw error;
@@ -91,6 +127,7 @@ export class ConfigWebSocketServer {
         userAgent: socket.handshake.headers["user-agent"],
         ip: socket.handshake.address,
         lastActivity: new Date().toISOString(),
+        reconnected: false,
       };
 
       connectedClients.set(socket.id, clientInfo);
@@ -102,8 +139,17 @@ export class ConfigWebSocketServer {
         ip: clientInfo.ip,
       });
 
-      // Send full configuration to new client
-      await this.sendFullConfigToClient(socket);
+      // Send immediate acknowledgment
+      socket.emit("connectionAck", {
+        clientId: socket.id,
+        serverTime: new Date().toISOString(),
+        message: "Connection established successfully",
+      });
+
+      // Send full configuration to new client after a brief delay
+      setTimeout(async () => {
+        await this.sendFullConfigToClient(socket);
+      }, 100);
 
       // Setup client event handlers
       this.setupClientEventHandlers(socket);
@@ -121,6 +167,23 @@ export class ConfigWebSocketServer {
    * @param {Object} socket - Socket instance
    */
   setupClientEventHandlers(socket) {
+    // Handle socket errors to prevent crashes
+    socket.on("error", (error) => {
+      logger.error(`Socket error from client ${socket.id}:`, {
+        error: error.message,
+        clientId: socket.id,
+        stack: error.stack,
+      });
+    });
+
+    // Handle transport errors
+    socket.on("connect_error", (error) => {
+      logger.warn(`Connection error for client ${socket.id}:`, {
+        error: error.message,
+        clientId: socket.id,
+      });
+    });
+
     // Handle client requesting full config refresh
     socket.on("requestFullConfig", async () => {
       try {
@@ -167,19 +230,44 @@ export class ConfigWebSocketServer {
 
     // Handle ping for connection health check
     socket.on("ping", () => {
-      socket.emit("pong", { timestamp: new Date().toISOString() });
-      this.updateClientActivity(socket.id);
+      try {
+        socket.emit("pong", { timestamp: new Date().toISOString() });
+        this.updateClientActivity(socket.id);
+      } catch (error) {
+        logger.error(`Error sending pong to ${socket.id}:`, error);
+      }
     });
 
     // Handle client disconnect
     socket.on("disconnect", (reason) => {
       this.handleClientDisconnect(socket.id, reason);
     });
+  }
 
-    // Handle client errors
-    socket.on("error", (error) => {
-      logger.error(`Client error from ${socket.id}:`, error);
-    });
+  /**
+   * Notify clients about server restart
+   */
+  notifyServerRestart() {
+    try {
+      if (!this.io) {
+        return;
+      }
+
+      logger.info("Notifying clients about server restart");
+
+      // Broadcast server restart notification
+      this.io.emit("serverRestarted", {
+        message:
+          "Server has been restarted and is ready to serve configurations",
+        timestamp: new Date().toISOString(),
+        serverVersion: process.env.npm_package_version || "1.0.0",
+        action: "requestFullConfig", // Suggest clients to request full config
+      });
+
+      logger.info("Server restart notification sent to all clients");
+    } catch (error) {
+      logger.error("Error sending server restart notification:", error);
+    }
   }
 
   /**

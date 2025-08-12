@@ -35,9 +35,15 @@ export async function initializeRemoteConfigModule(server) {
     await configManager.loadAllConfigs();
     console.log("📁 Loaded configurations from files");
 
-    // Initialize WebSocket server
-    configWebSocketServer.initialize(server);
-    console.log("🔌 WebSocket server initialized");
+    // Initialize WebSocket server with proper cleanup
+    try {
+      configWebSocketServer.initialize(server);
+      console.log("🔌 WebSocket server initialized");
+    } catch (wsError) {
+      console.error("❌ WebSocket server initialization failed:", wsError);
+      // Don't throw error - app can continue without WebSocket
+      console.warn("Continuing without WebSocket server");
+    }
 
     console.log("✅ Remote Configuration Module initialized successfully");
 
