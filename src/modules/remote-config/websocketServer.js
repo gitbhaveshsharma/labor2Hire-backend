@@ -202,7 +202,25 @@ export class ConfigWebSocketServer {
     // Handle client requesting specific screen config
     socket.on("requestScreenConfig", async (screenName) => {
       try {
-        const config = configManager.getScreenConfig(screenName);
+        // Try to get config from in-memory store first
+        let config = configManager.getScreenConfig(screenName);
+
+        // If not available, attempt to reload from file/template (covers newly added templates)
+        if (!config) {
+          try {
+            logger.debug(
+              `Config not found in memory for ${screenName}, attempting reload from file/template`
+            );
+            config = await configManager.reloadScreenConfig(screenName, {
+              source: "socket-request",
+            });
+            logger.debug(`Reload attempt finished for ${screenName}`);
+          } catch (reloadErr) {
+            logger.warn(`Reload attempt failed for ${screenName}:`, reloadErr);
+            // leave config as null so we fall through to emitting error below
+          }
+        }
+
         if (config) {
           socket.emit("screenConfigUpdate", {
             screen: screenName,

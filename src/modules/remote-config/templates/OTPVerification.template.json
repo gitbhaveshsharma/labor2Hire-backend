@@ -81,18 +81,21 @@
                   },
                   "children": [
                     {
-                      "type": "OtpInput",
+                      "type": "TextInput",
                       "props": {
-                        "otpLength": 6,
+                        "placeholder": "OTP",
                         "keyboardType": "numeric",
                         "placeholderTextColor": "#4C4A4A",
-                        "autoFocus": true
+                        "autoFocus": true,
+                        "maxLength": 6,
+                        "textAlign": "center"
                       },
                       "style": {
-                        "height": 52,
-                        "fontSize": 24,
+                        "height": 45,
+                        "fontSize": 20,
                         "color": "#000000",
-                        "letterSpacing": 6
+                        "letterSpacing": 6,
+                        "textAlign": "center"
                       },
                       "state": { "value": "auth.otpCode" }
                     }
@@ -182,7 +185,7 @@
               "type": "View",
               "style": {
                 "width": "100%",
-                "height": "50%",
+                "height": "45%",
                 "position": "relative",
                 "marginTop": 10
               },
