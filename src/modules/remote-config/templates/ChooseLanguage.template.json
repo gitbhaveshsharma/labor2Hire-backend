@@ -2,15 +2,15 @@
   "screenType": "ChooseLanguage",
   "metadata": {
     "screenTitle": "Choose Your Language",
-    "description": "Language selection screen with dynamic components",
+    "description": "Language selection screen with styled buttons and bottom gradient over image",
     "version": "{{VERSION}}",
     "lastUpdated": "{{TIMESTAMP}}"
   },
   "globalStyles": {
-    "backgroundColor": "#f8f9fa",
+    "backgroundColor": "#ffffff",
     "statusBar": {
       "barStyle": "dark-content",
-      "backgroundColor": "#f8f9fa"
+      "backgroundColor": "#ffffff"
     }
   },
   "components": [
@@ -18,61 +18,36 @@
       "type": "SafeAreaView",
       "style": {
         "flex": 1,
-        "backgroundColor": "#f8f9fa"
+        "backgroundColor": "#ffffff",
+        "justifyContent": "space-around"
       },
       "children": [
         {
-          "type": "StatusBar",
-          "props": {
-            "barStyle": "dark-content",
-            "backgroundColor": "#f8f9fa"
-          }
-        },
-        {
           "type": "View",
           "style": {
-            "position": "absolute",
-            "top": "15%",
-            "width": "80%",
-            "alignItems": "center"
+            "alignItems": "center",
+            "width": "100%",
+            "height": "30%",
+            "justifyContent": "center",
+            "marginTop": 30
           },
           "children": [
             {
               "type": "Text",
-              "props": {
-                "text": "Choose Your Language"
-              },
+              "props": { "text": "Choose Your" },
               "style": {
-                "fontSize": 28,
-                "fontWeight": "bold",
-                "color": "#333333",
-                "textAlign": "center"
+                "fontSize": 50,
+                "color": "#000000",
+                "fontWeight": "500"
               }
-            }
-          ]
-        },
-        {
-          "type": "ImageBackground",
-          "props": {
-            "source": {
-              "uri": "https://example.com/path/to/your/language-background-image.png"
             },
-            "resizeMode": "cover"
-          },
-          "style": {
-            "position": "absolute",
-            "width": "100%",
-            "height": "40%",
-            "bottom": 0
-          },
-          "children": [
             {
-              "type": "View",
+              "type": "Text",
+              "props": { "text": "Language" },
               "style": {
-                "position": "absolute",
-                "width": "100%",
-                "height": "100%",
-                "backgroundColor": "rgba(0,0,0,0.7)"
+                "fontSize": 60,
+                "fontWeight": "bold",
+                "color": "#000000"
               }
             }
           ]
@@ -81,57 +56,21 @@
           "type": "View",
           "style": {
             "width": "80%",
-            "alignItems": "center",
-            "justifyContent": "center",
-            "marginBottom": 40
+            "alignSelf": "center"
           },
           "children": [
             {
               "type": "TouchableOpacity",
               "style": {
-                "backgroundColor": "#007bff",
-                "borderRadius": 8,
-                "width": "100%",
-                "paddingVertical": 16,
+                "flexDirection": "row",
                 "alignItems": "center",
-                "justifyContent": "center",
-                "marginVertical": 5,
-                "elevation": 3
-              },
-              "actions": {
-                "onPress": {
-                  "type": "selectLanguage",
-                  "payload": {
-                    "languageCode": "en",
-                    "navigateTo": "Auth"
-                  }
-                }
-              },
-              "children": [
-                {
-                  "type": "Text",
-                  "props": {
-                    "text": "English"
-                  },
-                  "style": {
-                    "color": "#ffffff",
-                    "fontSize": 18,
-                    "fontWeight": "bold"
-                  }
-                }
-              ]
-            },
-            {
-              "type": "TouchableOpacity",
-              "style": {
-                "backgroundColor": "#28a745",
-                "borderRadius": 8,
-                "width": "100%",
+                "backgroundColor": "#f0f4ff",
+                "borderWidth": 2,
+                "borderColor": "#0984e3",
+                "borderRadius": 12,
                 "paddingVertical": 16,
-                "alignItems": "center",
-                "justifyContent": "center",
-                "marginVertical": 5,
-                "elevation": 3
+                "paddingHorizontal": 20,
+                "marginBottom": 16
               },
               "actions": {
                 "onPress": {
@@ -144,15 +83,145 @@
               },
               "children": [
                 {
-                  "type": "Text",
-                  "props": {
-                    "text": "हिन्दी"
-                  },
+                  "type": "View",
                   "style": {
-                    "color": "#ffffff",
-                    "fontSize": 18,
-                    "fontWeight": "bold"
+                    "width": 40,
+                    "height": 40,
+                    "borderRadius": 20,
+                    "backgroundColor": "#0984e3",
+                    "alignItems": "center",
+                    "justifyContent": "center",
+                    "marginRight": 16
+                  },
+                  "children": [
+                    {
+                      "type": "Text",
+                      "props": { "text": "अ" },
+                      "style": {
+                        "fontSize": 20,
+                        "color": "#ffffff",
+                        "fontWeight": "500"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "Text",
+                  "props": { "text": "हिन्दी" },
+                  "style": {
+                    "color": "#000000",
+                    "fontWeight": "500",
+                    "fontSize": 25
                   }
+                }
+              ]
+            },
+            {
+              "type": "TouchableOpacity",
+              "style": {
+                "flexDirection": "row",
+                "alignItems": "center",
+                "backgroundColor": "#f4f0ff",
+                "borderWidth": 1,
+                "borderColor": "#6c5ce7",
+                "borderRadius": 12,
+                "paddingVertical": 16,
+                "paddingHorizontal": 20
+              },
+              "actions": {
+                "onPress": {
+                  "type": "selectLanguage",
+                  "payload": {
+                    "languageCode": "en",
+                    "navigateTo": "Auth"
+                  }
+                }
+              },
+              "children": [
+                {
+                  "type": "View",
+                  "style": {
+                    "width": 40,
+                    "height": 40,
+                    "borderRadius": 20,
+                    "backgroundColor": "#6c5ce7",
+                    "alignItems": "center",
+                    "justifyContent": "center",
+                    "marginRight": 16
+                  },
+                  "children": [
+                    {
+                      "type": "Text",
+                      "props": { "text": "En" },
+                      "style": {
+                        "fontSize": 18,
+                        "color": "#ffffff",
+                        "fontWeight": "500"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "Text",
+                  "props": { "text": "English" },
+                  "style": {
+                    "fontSize": 25,
+                    "color": "#000000",
+                    "fontWeight": "500",
+                    "letterSpacing": 0.5
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "View",
+          "style": {
+            "width": "100%",
+            "height": "45%",
+            "position": "relative"
+          },
+          "children": [
+            {
+              "type": "ImageBackground",
+              "props": {
+                "source": {
+                  "uri": "https://wbtgxaqaqispcvvtvwsx.supabase.co/storage/v1/object/public/L2H/onboarding-screen/choose-lang.png"
+                },
+                "resizeMode": "cover"
+              },
+              "style": {
+                "width": "100%",
+                "height": "100%",
+                "position": "relative"
+              },
+              "children": [
+                {
+                  "type": "View",
+                  "style": {
+                    "position": "absolute",
+                    "top": 0,
+                    "left": 0,
+                    "width": "100%",
+                    "height": "100%"
+                  },
+                  "children": [
+                    {
+                      "type": "LinearGradient",
+                      "props": {
+                        "colors": [
+                          "rgba(255,255,255,1)",
+                          "rgba(255,255,255,0)"
+                        ],
+                        "start": { "x": 0, "y": 0 },
+                        "end": { "x": 0, "y": 1 }
+                      },
+                      "style": {
+                        "flex": 1
+                      }
+                    }
+                  ]
                 }
               ]
             }

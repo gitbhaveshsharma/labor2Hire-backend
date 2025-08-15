@@ -33,6 +33,30 @@
         }
       },
       {
+        "name": "OTPVerification",
+        "component": "OTPVerification",
+        "options": {
+          "headerShown": false,
+          "gestureEnabled": false
+        }
+      },
+      {
+        "name": "MultiStepAuth",
+        "component": "MultiStepAuth",
+        "options": {
+          "headerShown": false,
+          "gestureEnabled": false
+        }
+      },
+      {
+        "name": "Home",
+        "component": "Home",
+        "options": {
+          "headerShown": true,
+          "title": "Labor2Hire"
+        }
+      },
+      {
         "name": "Home",
         "component": "Home",
         "options": {

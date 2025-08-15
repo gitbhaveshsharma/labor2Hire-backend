@@ -1,8 +1,8 @@
 {
-  "screenType": "AuthPhone",
+  "screenType": "OTPVerification",
   "metadata": {
-    "screenTitle": "Phone Authentication",
-    "description": "Auth screen styled like the provided mock with large title, phone input, primary CTA, and bottom illustration with gradient overlay",
+    "screenTitle": "OTP Verification",
+    "description": "Screen for entering and verifying the OTP code sent to the user's mobile number with consistent styling",
     "version": "{{VERSION}}",
     "lastUpdated": "{{TIMESTAMP}}"
   },
@@ -40,7 +40,7 @@
               "children": [
                 {
                   "type": "Text",
-                  "props": { "text": "Choose Your" },
+                  "props": { "text": "Enter Your" },
                   "style": {
                     "fontSize": 50,
                     "color": "#000000",
@@ -50,7 +50,7 @@
                 },
                 {
                   "type": "Text",
-                  "props": { "text": "Number" },
+                  "props": { "text": "OTP Code" },
                   "style": {
                     "fontSize": 60,
                     "fontWeight": "bold",
@@ -75,24 +75,26 @@
                     "backgroundColor": "#f0f6ff",
                     "borderRadius": 12,
                     "paddingHorizontal": 16,
-                    "paddingVertical": 6,
-                    "marginBottom": 14
+                    "paddingVertical": 12,
+                    "marginBottom": 14,
+                    "alignItems": "center"
                   },
                   "children": [
                     {
-                      "type": "TextInput",
+                      "type": "OtpInput",
                       "props": {
-                        "placeholder": "Mobile number",
-                        "keyboardType": "phone-pad",
+                        "otpLength": 6,
+                        "keyboardType": "numeric",
                         "placeholderTextColor": "#4C4A4A",
-                        "maxLength": 15
+                        "autoFocus": true
                       },
                       "style": {
                         "height": 52,
-                        "fontSize": 20,
-                        "color": "#000000"
+                        "fontSize": 24,
+                        "color": "#000000",
+                        "letterSpacing": 6
                       },
-                      "state": { "value": "auth.phoneNumber" }
+                      "state": { "value": "auth.otpCode" }
                     }
                   ]
                 },
@@ -104,14 +106,14 @@
                     "paddingVertical": 16,
                     "alignItems": "center",
                     "justifyContent": "center"
-                    
                   },
                   "actions": {
                     "onPress": {
-                      "type": "requestOtp",
+                      "type": "verifyOtp",
                       "payload": {
                         "phone": "{{state.auth.phoneNumber}}",
-                        "navigateTo": "OTPVerification"
+                        "otp": "{{state.auth.otpCode}}",
+                        "navigateTo": "Home"
                       }
                     }
                   },
@@ -126,7 +128,7 @@
                       "children": [
                         {
                           "type": "Text",
-                          "props": { "text": "NEXT" },
+                          "props": { "text": "VERIFY" },
                           "style": {
                             "color": "#ffffff",
                             "fontSize": 20,
@@ -138,13 +140,39 @@
                         {
                           "type": "Icon",
                           "props": {
-                            "name": "arrow-forward",
+                            "name": "check-circle",
                             "type": "MaterialIcons",
                             "iconSize": 20,
                             "iconColor": "#ffffff"
                           }
                         }
                       ]
+                    }
+                  ]
+                },
+                {
+                  "type": "TouchableOpacity",
+                  "style": {
+                    "marginTop": 12,
+                    "alignItems": "center"
+                  },
+                  "actions": {
+                    "onPress": {
+                      "type": "resendOtp",
+                      "payload": {
+                        "phone": "{{state.auth.phoneNumber}}"
+                      }
+                    }
+                  },
+                  "children": [
+                    {
+                      "type": "Text",
+                      "props": { "text": "Resend OTP" },
+                      "style": {
+                        "color": "#0a7aff",
+                        "fontSize": 16,
+                        "fontWeight": "500"
+                      }
                     }
                   ]
                 }
@@ -163,7 +191,7 @@
                   "type": "ImageBackground",
                   "props": {
                     "source": {
-                      "uri": "https://wbtgxaqaqispcvvtvwsx.supabase.co/storage/v1/object/public/L2H/onboarding-screen/number-screen.png"
+                      "uri": "https://wbtgxaqaqispcvvtvwsx.supabase.co/storage/v1/object/public/L2H/onboarding-screen/otp-screen.png"
                     },
                     "resizeMode": "cover"
                   },
@@ -222,7 +250,7 @@
       },
       {
         "type": "Text",
-        "props": { "text": "Preparing phone verification..." },
+        "props": { "text": "Verifying OTP..." },
         "style": { "fontSize": 16, "color": "#333333", "fontWeight": "500" }
       }
     ]
@@ -239,17 +267,17 @@
     "children": [
       {
         "type": "Text",
-        "props": { "text": "⚠️" },
+        "props": { "text": "❌" },
         "style": { "fontSize": 44, "marginBottom": 10 }
       },
       {
         "type": "Text",
-        "props": { "text": "Unable to start verification" },
+        "props": { "text": "OTP Verification Failed" },
         "style": { "fontSize": 18, "fontWeight": "700", "color": "#ff3333", "marginBottom": 6 }
       },
       {
         "type": "Text",
-        "props": { "text": "Please check your connection and try again." },
+        "props": { "text": "The code you entered is invalid or expired. Please try again." },
         "style": { "fontSize": 14, "color": "#666666", "textAlign": "center", "lineHeight": 20, "marginBottom": 18 }
       },
       {
@@ -262,8 +290,8 @@
         },
         "actions": {
           "onPress": {
-            "type": "retryPhoneAuth",
-            "payload": { "message": "Retrying..." }
+            "type": "retryOtpVerification",
+            "payload": { "message": "Retrying verification..." }
           }
         },
         "children": [

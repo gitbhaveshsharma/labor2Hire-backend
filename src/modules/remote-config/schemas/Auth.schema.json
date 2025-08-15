@@ -1,378 +1,209 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Authentication Screen Configuration Schema",
+  "$id": "https://yourdomain.com/schemas/auth-screen.json",
+  "title": "Authentication & OTP Verification Screen Configuration Schema",
+  "description": "Defines configuration for authentication and OTP verification screens with dynamic layouts and data binding",
   "type": "object",
+  "required": ["screenType", "components"],
+  "additionalProperties": false,
+
   "properties": {
     "screenType": {
       "type": "string",
-      "enum": ["Auth"],
-      "description": "Screen type identifier"
+      "enum": ["Auth", "AuthPhone", "OTPVerification", "MultiStepAuth"],
+      "description": "The purpose/type of this screen"
     },
+
     "metadata": {
       "type": "object",
-      "required": ["screenTitle", "description", "version", "lastUpdated"],
+      "description": "Informational metadata about this screen version",
       "properties": {
-        "screenTitle": {
-          "type": "string",
-          "description": "Title displayed on the authentication screen"
-        },
-        "description": {
-          "type": "string",
-          "description": "Screen description"
-        },
+        "screenTitle": { "type": "string" },
+        "description": { "type": "string" },
         "version": {
           "type": "string",
-          "description": "Version number"
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+          "description": "Semantic versioning format: MAJOR.MINOR.PATCH"
         },
         "lastUpdated": {
           "type": "string",
           "format": "date-time",
-          "description": "ISO 8601 timestamp of last update"
+          "description": "ISO 8601 timestamp"
         }
-      }
+      },
+      "additionalProperties": false
     },
+
     "globalStyles": {
       "type": "object",
+      "description": "Global styling applied to the entire screen",
       "properties": {
-        "backgroundColor": {
-          "type": "string",
-          "description": "Background color"
-        },
+        "backgroundColor": { "type": "string" },
         "statusBar": {
           "type": "object",
           "properties": {
-            "barStyle": { "type": "string" },
+            "barStyle": { "type": "string", "enum": ["default", "light-content", "dark-content"] },
             "backgroundColor": { "type": "string" }
-          }
+          },
+          "additionalProperties": false
         }
-      }
+      },
+      "additionalProperties": true
     },
+
     "components": {
       "type": "array",
-      "description": "Array of UI components",
+      "minItems": 1,
+      "description": "Dynamic UI component tree for the screen",
       "items": { "$ref": "#/definitions/Component" }
     },
+
+    "loadingState": {
+      "$ref": "#/definitions/Component",
+      "description": "UI layout while data or network requests are pending"
+    },
+
     "errorState": {
       "$ref": "#/definitions/Component",
-      "description": "Error state component"
+      "description": "UI layout for failure/error states"
     },
-    "secondaryColor": {
-      "type": "string",
-      "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
-      "description": "Secondary color in hex format"
-    },
-    "accentColor": {
-      "type": "string",
-      "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
-      "description": "Accent color in hex format"
-    },
-        "image": {
-    "type": "object",
-    "properties": {
-        "url": {
-            "type": "string",
-            "format": "uri",
-            "description": "URL of the image to display on the authentication screen"
-        },
-        "alt": {
-            "type": "string",
-            "description": "Alternative text for the image"
-        },
-        "position": {
-            "type": "string",
-            "enum": ["top", "bottom", "left", "right", "center"],
-            "description": "Position of the image on the screen"
-        }
-    },
-    "required": ["url"],
-    "additionalProperties": false
-},
-    "loginButton": {
+
+    "otpConfig": {
       "type": "object",
+      "description": "Optional OTP verification-specific configuration",
       "properties": {
-        "text": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 50
-        },
-        "backgroundColor": {
-          "type": "string",
-          "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
-        },
-        "textColor": {
-          "type": "string",
-          "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
-        },
-        "borderRadius": {
-          "type": "string",
-          "pattern": "^\\d+(px|em|rem|%)$"
-        },
-        "enabled": {
-          "type": "boolean"
-        }
-      },
-      "required": ["text", "backgroundColor", "textColor", "enabled"],
-      "additionalProperties": false
-    },
-    "registerButton": {
-      "type": "object",
-      "properties": {
-        "text": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 50
-        },
-        "backgroundColor": {
-          "type": "string",
-          "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
-        },
-        "textColor": {
-          "type": "string",
-          "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
-        },
-        "borderRadius": {
-          "type": "string",
-          "pattern": "^\\d+(px|em|rem|%)$"
-        },
-        "enabled": {
-          "type": "boolean"
-        }
-      },
-      "required": ["text", "backgroundColor", "textColor", "enabled"],
-      "additionalProperties": false
-    },
-    "forgotPasswordLink": {
-      "type": "object",
-      "properties": {
-        "text": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 50
-        },
-        "textColor": {
-          "type": "string",
-          "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
-        },
-        "enabled": {
-          "type": "boolean"
-        }
-      },
-      "required": ["text", "textColor", "enabled"],
-      "additionalProperties": false
-    },
-    "socialLogin": {
-      "type": "object",
-      "properties": {
-        "enabled": {
-          "type": "boolean"
-        },
-        "providers": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "enum": ["google", "facebook", "apple", "linkedin", "twitter"]
-          },
-          "uniqueItems": true
-        },
-        "googleButton": {
-          "type": "object",
-          "properties": {
-            "text": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 50
-            },
-            "backgroundColor": {
-              "type": "string",
-              "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
-            },
-            "textColor": {
-              "type": "string",
-              "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
-            }
-          },
-          "required": ["text", "backgroundColor", "textColor"],
-          "additionalProperties": false
-        },
-        "facebookButton": {
-          "type": "object",
-          "properties": {
-            "text": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 50
-            },
-            "backgroundColor": {
-              "type": "string",
-              "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
-            },
-            "textColor": {
-              "type": "string",
-              "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
-            }
-          },
-          "required": ["text", "backgroundColor", "textColor"],
-          "additionalProperties": false
-        }
-      },
-      "required": ["enabled"],
-      "additionalProperties": false
-    },
-    "inputFields": {
-      "type": "object",
-      "properties": {
-        "phoneNumber": {
-          "type": "object",
-          "properties": {
-            "placeholder": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 100
-            },
-            "required": {
-              "type": "boolean"
-            },
-            "validation": {
-              "type": "string",
-              "enum": ["phone", "email", "text"]
-            }
-          },
-          "required": ["placeholder", "required"],
-          "additionalProperties": false
-        },
-        "password": {
-          "type": "object",
-          "properties": {
-            "placeholder": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 100
-            },
-            "required": {
-              "type": "boolean"
-            },
-            "minLength": {
-              "type": "integer",
-              "minimum": 4,
-              "maximum": 20
-            }
-          },
-          "required": ["placeholder", "required"],
-          "additionalProperties": false
-        }
+        "otpLength": { "type": "integer", "minimum": 4, "maximum": 8 },
+        "otpType": { "type": "string", "enum": ["numeric", "alphanumeric"] },
+        "autoSubmit": { "type": "boolean", "default": false },
+        "resendLimit": { "type": "integer", "minimum": 0 },
+        "resendTimeoutSeconds": { "type": "integer", "minimum": 0 },
+        "maxAttempts": { "type": "integer", "minimum": 1 },
+        "attemptWindowSeconds": { "type": "integer", "minimum": 1 },
+        "allowPaste": { "type": "boolean" }
       },
       "additionalProperties": false
-    },
-    "messaging": {
-      "type": "object",
-      "properties": {
-        "welcomeText": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 200
-        },
-        "errorMessages": {
-          "type": "object",
-          "properties": {
-            "invalidCredentials": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 200
-            },
-            "networkError": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 200
-            },
-            "serverError": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 200
-            }
-          },
-          "additionalProperties": false
-        },
-        "successMessages": {
-          "type": "object",
-          "properties": {
-            "loginSuccess": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 200
-            },
-            "registrationSuccess": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 200
-            }
-          },
-          "additionalProperties": false
-        }
-      },
-      "additionalProperties": false
-    },
-    "features": {
-      "type": "object",
-      "properties": {
-        "biometricLogin": {
-          "type": "boolean"
-        },
-        "rememberMe": {
-          "type": "boolean"
-        },
-        "autoLogin": {
-          "type": "boolean"
-        },
-        "maintenanceMode": {
-          "type": "boolean"
-        }
-      },
-      "additionalProperties": false
-    },
-    "animations": {
-      "type": "object",
-      "properties": {
-        "enableTransitions": {
-          "type": "boolean"
-        },
-        "transitionDuration": {
-          "type": "integer",
-          "minimum": 100,
-          "maximum": 2000
-        },
-        "enableSplashScreen": {
-          "type": "boolean"
-        },
-        "splashDuration": {
-          "type": "integer",
-          "minimum": 1000,
-          "maximum": 10000
-        }
-      },
-      "additionalProperties": false
-    },
-    "version": {
-      "type": "string",
-      "pattern": "^\\d+\\.\\d+\\.\\d+$",
-      "description": "Version number in semver format"
-    },
-    "lastUpdated": {
-      "type": "string",
-      "format": "date-time",
-      "description": "ISO 8601 timestamp of last update"
-    },
-    "_metadata": {
-      "type": "object",
-      "description": "Internal metadata (automatically managed)",
-      "additionalProperties": true
     }
   },
-  "required": [
-    "screenTitle",
-    "backgroundColor",
-    "primaryColor",
-    "version",
-    "lastUpdated"
-  ],
-  "additionalProperties": false
+
+  "definitions": {
+    "Component": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "View", "Text", "TouchableOpacity", "Image", "ImageBackground", "ScrollView", "SafeAreaView",
+            "StatusBar", "ActivityIndicator", "TextInput", "FlatList", "Modal", "Switch", "Slider",
+            "Picker", "Button", "Pressable", "KeyboardAvoidingView", "LinearGradient", "Icon", "OtpInput"
+          ],
+          "description": "React Native component type"
+        },
+        "id": { "type": "string" },
+        "props": { "$ref": "#/definitions/ComponentProps" },
+        "style": { "$ref": "#/definitions/Style" },
+        "children": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Component" }
+        },
+        "actions": { "$ref": "#/definitions/Actions" },
+        "conditions": { "$ref": "#/definitions/Conditions" },
+        "data": {
+          "type": "object",
+          "properties": {
+            "source": { "type": "string" },
+            "mapping": { "type": "object" }
+          },
+          "additionalProperties": false
+        },
+        "state": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+
+    "ComponentProps": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "text": { "type": "string" },
+        "source": {
+          "oneOf": [
+            { "type": "object", "properties": { "uri": { "type": "string" } }, "additionalProperties": false },
+            { "type": "number" }
+          ]
+        },
+        "placeholder": { "type": "string" },
+        "value": { "type": ["string", "number", "boolean"] },
+        "keyboardType": { "type": "string", "enum": ["default", "numeric", "email-address", "phone-pad"] },
+        "secureTextEntry": { "type": "boolean" },
+        "maxLength": { "type": "integer" },
+        "resizeMode": { "type": "string", "enum": ["cover", "contain", "stretch", "repeat", "center"] },
+        "name": { "type": "string" },
+        "iconFamily": { "type": "string" },
+        "iconSize": { "type": "number" },
+        "iconColor": { "type": "string" },
+        "placeholderTextColor": { "type": "string" },
+        "otpLength": { "type": "integer" }
+      }
+    },
+
+    "Style": {
+      "type": "object",
+      "description": "React Native style object",
+      "additionalProperties": true
+    },
+
+    "Actions": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/definitions/Action" }
+    },
+
+    "Action": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "navigate", "dispatch", "openModal", "closeModal", "showAlert", "makeApiCall",
+            "updateState", "executeScript", "openUrl", "retryLoad", "login", "requestOtp",
+            "OTPVerification", "resendOtp", "retryPhoneAuth"
+          ]
+        },
+        "payload": { "type": "object", "additionalProperties": true },
+        "condition": { "$ref": "#/definitions/Condition" },
+        "debounce": { "type": "number" }
+      },
+      "additionalProperties": false
+    },
+
+    "Conditions": {
+      "type": "object",
+      "properties": {
+        "show": { "$ref": "#/definitions/Condition" },
+        "hide": { "$ref": "#/definitions/Condition" },
+        "enable": { "$ref": "#/definitions/Condition" },
+        "disable": { "$ref": "#/definitions/Condition" }
+      },
+      "additionalProperties": false
+    },
+
+    "Condition": {
+      "type": "object",
+      "required": ["operator"],
+      "properties": {
+        "operator": {
+          "type": "string",
+          "enum": ["equals", "notEquals", "greaterThan", "lessThan", "contains", "exists", "and", "or", "not"]
+        },
+        "field": { "type": "string" },
+        "value": {},
+        "conditions": { "type": "array", "items": { "$ref": "#/definitions/Condition" } }
+      },
+      "additionalProperties": false
+    }
+  }
 }

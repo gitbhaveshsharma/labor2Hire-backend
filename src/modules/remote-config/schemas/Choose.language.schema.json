@@ -73,7 +73,9 @@
             "Picker",
             "Button",
             "Pressable",
-            "KeyboardAvoidingView"
+            "KeyboardAvoidingView",
+            "LinearGradient",
+            "Icon"
           ],
           "description": "React Native component type"
         },
@@ -204,6 +206,68 @@
         },
         "bounces": {
           "type": "boolean"
+        },
+        "colors": {
+          "type": "array",
+          "description": "Array of colors for LinearGradient",
+          "items": {
+            "type": "string"
+          }
+        },
+        "start": {
+          "type": "object",
+          "description": "Start point for LinearGradient",
+          "properties": {
+            "x": {"type": "number"},
+            "y": {"type": "number"}
+          }
+        },
+        "end": {
+          "type": "object", 
+          "description": "End point for LinearGradient",
+          "properties": {
+            "x": {"type": "number"},
+            "y": {"type": "number"}
+          }
+        },
+        "locations": {
+          "type": "array",
+          "description": "Color stop locations for LinearGradient",
+          "items": {
+            "type": "number"
+          }
+        },
+        "angle": {
+          "type": "number",
+          "description": "Angle for LinearGradient"
+        },
+        "useAngle": {
+          "type": "boolean",
+          "description": "Whether to use angle for LinearGradient"
+        },
+        "angleCenter": {
+          "type": "object",
+          "description": "Center point for angle-based gradients",
+          "properties": {
+            "x": {"type": "number"},
+            "y": {"type": "number"}
+          }
+        },
+        "name": {
+          "type": "string",
+          "description": "Icon name for Icon components"
+        },
+        "type": {
+          "type": "string",
+          "description": "Icon family type (MaterialIcons, FontAwesome, etc.)"
+        },
+        "iconSize": {
+          "type": "number",
+          "description": "Icon size"
+        },
+        "iconColor": {
+          "type": "string",
+          "description": "Icon color"
         }
       }
     },
