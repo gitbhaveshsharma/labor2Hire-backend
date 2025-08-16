@@ -57,11 +57,11 @@
         }
       },
       {
-        "name": "Home",
-        "component": "Home",
+        "name": "ChooseRole",
+        "component": "ChooseRole",
         "options": {
           "headerShown": true,
-          "title": "Labor2Hire"
+          "title": "Choose Your Role"
         }
       }
     ]

@@ -1,12 +1,13 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Dynamic UI Component Tree Schema",
-  "description": "Schema for backend-driven dynamic component trees in React Native applications",
+  "title": "Choose Language Schema",
+  "description": "Schema for the Choose Language remote-config template; validates component tree, styles, and action payloads (e.g., selectLanguage) for the language selection screen.",
   "type": "object",
   "required": ["screenType", "components"],
   "properties": {
     "screenType": {
       "type": "string",
+      "enum": ["ChooseLanguage"],
       "description": "Identifier for the screen type"
     },
     "metadata": {
@@ -304,6 +305,10 @@
         "fontSize": {
           "type": "number"
         },
+        "letterSpacing": {
+          "type": "number",
+          "description": "Spacing between characters (used by Text components)"
+        },
         "fontWeight": {
           "oneOf": [
             {
@@ -576,7 +581,29 @@
           "type": "number",
           "description": "Debounce delay in milliseconds"
         }
-      }
+  },
+  "allOf": [
+        {
+          "if": {
+            "properties": { "type": { "const": "selectLanguage" } }
+          },
+          "then": {
+            "properties": {
+              "payload": { "$ref": "#/definitions/SelectLanguagePayload" }
+            },
+            "required": ["type", "payload"]
+          }
+        }
+      ]
+    },
+    "SelectLanguagePayload": {
+      "type": "object",
+      "required": ["languageCode"],
+      "properties": {
+        "languageCode": { "type": "string", "description": "ISO language code (e.g., 'en', 'hi')" },
+        "navigateTo": { "type": "string", "description": "Optional screen to navigate to after selection" }
+      },
+      "additionalProperties": false
     },
     "Conditions": {
       "type": "object",

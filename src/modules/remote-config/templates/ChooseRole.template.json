@@ -1,8 +1,8 @@
 {
-  "screenType": "OTPVerification",
+  "screenType": "Role",
   "metadata": {
-    "screenTitle": "OTP Verification",
-    "description": "Screen for entering and verifying the OTP code sent to the user's mobile number with consistent styling",
+    "screenTitle": "Choose Your Role",
+    "description": "Role selection screen with icons and bottom illustration + gradient overlay",
     "version": "{{VERSION}}",
     "lastUpdated": "{{TIMESTAMP}}"
   },
@@ -24,9 +24,7 @@
       "children": [
         {
           "type": "View",
-          "style": {
-            "paddingTop": 24
-          },
+          "style": { "paddingTop": 24 },
           "children": [
             {
               "type": "View",
@@ -40,7 +38,7 @@
               "children": [
                 {
                   "type": "Text",
-                  "props": { "text": "Enter Your" },
+                  "props": { "text": "What are" },
                   "style": {
                     "fontSize": 50,
                     "color": "#000000",
@@ -50,7 +48,7 @@
                 },
                 {
                   "type": "Text",
-                  "props": { "text": "OTP Code" },
+                  "props": { "text": "You" },
                   "style": {
                     "fontSize": 60,
                     "fontWeight": "bold",
@@ -62,119 +60,112 @@
             },
             {
               "type": "View",
-              "style": {
-                "width": "80%",
-                "alignSelf": "center"
-              },
+              "style": { "width": "80%", "alignSelf": "center" },
               "children": [
-                {
-                  "type": "View",
-                  "style": {
-                    "borderWidth": 2,
-                    "borderColor": "#0a7aff",
-                    "backgroundColor": "#f0f6ff",
-                    "borderRadius": 12,
-                    "paddingHorizontal": 16,
-                    "paddingVertical": 6,
-                    "marginBottom": 14,
-                    "alignItems": "center"
-                  },
-                  "children": [
-                    {
-                      "type": "TextInput",
-                      "props": {
-                        "placeholder": "OTP",
-                        "keyboardType": "numeric",
-                        "placeholderTextColor": "#4C4A4A",
-                        "autoFocus": true,
-                        "maxLength": 6,
-                        "textAlign": "center"
-                      },
-                      "style": {
-                        "height": 52,
-                        "fontSize": 20,
-                        "color": "#000000",
-                        "letterSpacing": 6,
-                        "textAlign": "center"
-                      },
-                      "state": { "value": "auth.otpCode" }
-                    }
-                  ]
-                },
                 {
                   "type": "TouchableOpacity",
                   "style": {
-                    "backgroundColor": "#0a7aff",
+                    "flexDirection": "row",
+                    "alignItems": "center",
+                    "backgroundColor": "#f0f4ff",
+                    "borderWidth": 2,
+                    "borderColor": "#0984e3",
                     "borderRadius": 12,
                     "paddingVertical": 16,
-                    "alignItems": "center",
-                    "justifyContent": "center"
+                    "paddingHorizontal": 20,
+                    "marginBottom": 16
                   },
                   "actions": {
                     "onPress": {
-                      "type": "verifyOtp",
-                      "payload": {
-                        "phone": "{{state.auth.phoneNumber}}",
-                        "otp": "{{state.auth.otpCode}}",
-                        "navigateTo": "ChooseRole"
-                      }
+                      "type": "selectRole",
+                      "payload": { "role": "labor", "navigateTo": "Categories" }
                     }
                   },
                   "children": [
                     {
                       "type": "View",
                       "style": {
-                        "flexDirection": "row",
+                        "width": 40,
+                        "height": 40,
+                        "borderRadius": 20,
+                        "backgroundColor": "#0984e3",
                         "alignItems": "center",
-                        "justifyContent": "center"
+                        "justifyContent": "center",
+                        "marginRight": 16
                       },
                       "children": [
                         {
-                          "type": "Text",
-                          "props": { "text": "VERIFY" },
-                          "style": {
-                            "color": "#ffffff",
-                            "fontSize": 20,
-                            "fontWeight": "600",
-                            "letterSpacing": 0.9,
-                            "marginRight": 8
-                          }
-                        },
-                        {
                           "type": "Icon",
                           "props": {
-                            "name": "check-circle",
+                            "name": "construction",
                             "type": "MaterialIcons",
-                            "iconSize": 20,
+                            "iconSize": 22,
                             "iconColor": "#ffffff"
                           }
                         }
                       ]
+                    },
+                    {
+                      "type": "Text",
+                      "props": { "text": "Labor" },
+                      "style": {
+                        "color": "#000000",
+                        "fontWeight": "500",
+                        "fontSize": 25
+                      }
                     }
                   ]
                 },
                 {
                   "type": "TouchableOpacity",
                   "style": {
-                    "marginTop": 12,
-                    "alignItems": "center"
+                    "flexDirection": "row",
+                    "alignItems": "center",
+                    "backgroundColor": "#f4f0ff",
+                    "borderWidth": 1,
+                    "borderColor": "#6c5ce7",
+                    "borderRadius": 12,
+                    "paddingVertical": 16,
+                    "paddingHorizontal": 20
                   },
                   "actions": {
                     "onPress": {
-                      "type": "resendOtp",
-                      "payload": {
-                        "phone": "{{state.auth.phoneNumber}}"
-                      }
+                      "type": "selectRole",
+                      "payload": { "role": "employer", "navigateTo": "Home" }
                     }
                   },
                   "children": [
                     {
-                      "type": "Text",
-                      "props": { "text": "Resend OTP" },
+                      "type": "View",
                       "style": {
-                        "color": "#0a7aff",
-                        "fontSize": 16,
-                        "fontWeight": "500"
+                        "width": 40,
+                        "height": 40,
+                        "borderRadius": 20,
+                        "backgroundColor": "#6c5ce7",
+                        "alignItems": "center",
+                        "justifyContent": "center",
+                        "marginRight": 16
+                      },
+                      "children": [
+                        {
+                          "type": "Icon",
+                          "props": {
+                            "name": "account-circle",
+                            "type": "MaterialIcons",
+                            "iconSize": 22,
+                            "iconColor": "#ffffff"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "Text",
+                      "props": { "text": "Employer" },
+                      "style": {
+                        "fontSize": 25,
+                        "color": "#000000",
+                        "fontWeight": "500",
+                        "letterSpacing": 0.5
                       }
                     }
                   ]
@@ -183,18 +174,19 @@
             },
             {
               "type": "View",
-              "style": {
+             "style": {
                 "width": "100%",
                 "height": "51%",
                 "position": "relative",
-                "paddingBottom": 5
+                "marginTop": 10,
+                "paddingBottom": 20
               },
               "children": [
                 {
                   "type": "ImageBackground",
                   "props": {
                     "source": {
-                      "uri": "https://wbtgxaqaqispcvvtvwsx.supabase.co/storage/v1/object/public/L2H/onboarding-screen/otp-screen.png"
+                      "uri": "https://wbtgxaqaqispcvvtvwsx.supabase.co/storage/v1/object/public/L2H/onboarding-screen/role-screen.png"
                     },
                     "resizeMode": "cover"
                   },
@@ -217,12 +209,9 @@
                         {
                           "type": "LinearGradient",
                           "props": {
-                            "colors": [
-                              "rgba(255,255,255,1)",
-                              "rgba(255,255,255,0)"
-                            ],
+                            "colors": ["rgba(255,255,255,1)", "rgba(255,255,255,0)"],
                             "start": { "x": 0, "y": 0 },
-                            "end": { "x": 0, "y": 0.55 }
+                            "end": { "x": 0, "y": 1 }
                           },
                           "style": { "flex": 1 }
                         }
@@ -247,14 +236,36 @@
     },
     "children": [
       {
+        "type": "StatusBar",
+        "props": {
+          "barStyle": "dark-content",
+          "backgroundColor": "#ffffff"
+        }
+      },
+      {
         "type": "ActivityIndicator",
-        "props": { "size": "large", "color": "#0a7aff" },
-        "style": { "marginBottom": 14 }
+        "props": { "size": "large", "color": "#007bff" },
+        "style": { "marginBottom": 16 }
       },
       {
         "type": "Text",
-        "props": { "text": "Verifying OTP..." },
-        "style": { "fontSize": 16, "color": "#333333", "fontWeight": "500" }
+        "props": { "text": "Loading role options..." },
+        "style": {
+          "fontSize": 18,
+          "color": "#333333",
+          "textAlign": "center",
+          "fontWeight": "500"
+        }
+      },
+      {
+        "type": "Text",
+        "props": { "text": "Please wait while we prepare your role selection." },
+        "style": {
+          "fontSize": 14,
+          "color": "#666666",
+          "textAlign": "center",
+          "marginTop": 8
+        }   
       }
     ]
   },
@@ -268,40 +279,49 @@
       "padding": 20
     },
     "children": [
+      { "type": "Text", "props": { "text": "⚠️" }, "style": { "fontSize": 48, "textAlign": "center", "marginBottom": 16 } },
       {
         "type": "Text",
-        "props": { "text": "❌" },
-        "style": { "fontSize": 44, "marginBottom": 10 }
+        "props": { "text": "Connection Error" },
+        "style": {
+          "fontSize": 20,
+          "fontWeight": "bold",
+          "color": "#ff3333",
+          "textAlign": "center",
+          "marginBottom": 8
+        }
       },
       {
         "type": "Text",
-        "props": { "text": "OTP Verification Failed" },
-        "style": { "fontSize": 18, "fontWeight": "700", "color": "#ff3333", "marginBottom": 6 }
-      },
-      {
-        "type": "Text",
-        "props": { "text": "The code you entered is invalid or expired. Please try again." },
-        "style": { "fontSize": 14, "color": "#666666", "textAlign": "center", "lineHeight": 20, "marginBottom": 18 }
+        "props": { "text": "Failed to load role options. Please check your internet connection and try again." },
+        "style": {
+          "fontSize": 16,
+          "color": "#666666",
+          "textAlign": "center",
+          "marginBottom": 24,
+          "lineHeight": 22
+        }
       },
       {
         "type": "TouchableOpacity",
         "style": {
-          "backgroundColor": "#0a7aff",
-          "paddingHorizontal": 22,
-          "paddingVertical": 10,
-          "borderRadius": 10
+          "backgroundColor": "#007bff",
+          "paddingHorizontal": 24,
+          "paddingVertical": 12,
+          "borderRadius": 8,
+          "elevation": 2
         },
         "actions": {
           "onPress": {
-            "type": "retryOtpVerification",
-            "payload": { "message": "Retrying verification..." }
+            "type": "retryLoad",
+            "payload": { "message": "Retrying role load..." }
           }
         },
         "children": [
           {
             "type": "Text",
             "props": { "text": "Try Again" },
-            "style": { "color": "#ffffff", "fontSize": 16, "fontWeight": "700" }
+            "style": { "color": "#ffffff", "fontSize": 16, "fontWeight": "600" }
           }
         ]
       }

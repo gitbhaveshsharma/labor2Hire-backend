@@ -170,7 +170,7 @@
           "enum": [
             "navigate", "dispatch", "openModal", "closeModal", "showAlert", "makeApiCall",
             "updateState", "executeScript", "openUrl", "retryLoad", "login", "requestOtp",
-            "OTPVerification", "resendOtp", "retryPhoneAuth"
+            "OTPVerification", "resendOtp", "retryPhoneAuth","ChooseRole"
           ]
         },
         "payload": { "type": "object", "additionalProperties": true },
